@@ -25,6 +25,7 @@ const customSettings = Object.freeze({
   showFps: false,
   showWatermark: false,
   showWarnings: false,
+  showBar: false,
   subtitleOverlay: true,
   guard: false,
   fillDisplay: false,

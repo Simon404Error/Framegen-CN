@@ -7,7 +7,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
   const $ = (id) => document.getElementById(id);
   const BOOLEAN_FIELDS = Object.freeze([
     'fg', 'sr', 'hdr', 'anime', 'guard', 'fillDisplay', 'limitToDisplay', 'motionAdaptive', 'periodicRepair', 'cadenceSmoothing', 'renderCubic', 'hoverReveal',
-    'showFps', 'showWatermark', 'showWarnings', 'subtitleOverlay', 'compare', 'debug',
+    'showFps', 'showWatermark', 'showWarnings', 'subtitleOverlay', 'compare', 'debug', 'showBar',
   ]);
   const FPS_LIMIT_PRESETS = Profiles.FPS_LIMIT_PRESETS;
   const STORE_MUTATION_CONTROLS = Object.freeze([

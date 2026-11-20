@@ -596,6 +596,8 @@ export class Controls {
       <div class="fc-divider"></div>
       <label class="fc-row"><span>FPS 计数器<small>显示帧率和渲染耗时</small></span>
         <input class="fc-sw" type="checkbox" id="fcShowFps"></label>
+      <label class="fc-row"><span>进度条<small>补帧时的播放进度条</small></span>
+        <input class="fc-sw" type="checkbox" id="fcShowBar"></label>
       <label class="fc-row"><span>水印<small>在视频上显示 Framegen 标签</small></span>
         <input class="fc-sw" type="checkbox" id="fcWatermark"></label>
       <label class="fc-row"><span>警告<small>在视频上显示非关键提示</small></span>
@@ -648,6 +650,7 @@ export class Controls {
       if (option) set({ sharpness: Number(option.dataset.value) });
     };
     q('#fcShowFps').onchange = e => set({ showFps: e.currentTarget.checked });
+    q('#fcShowBar').onchange = e => set({ showBar: e.currentTarget.checked });
     q('#fcWatermark').onchange = e => set({ showWatermark: e.currentTarget.checked });
     q('#fcWarnings').onchange = e => set({ showWarnings: e.currentTarget.checked });
     q('#fcRes').onchange = e => set({ res: Number(e.currentTarget.value) });
@@ -673,6 +676,7 @@ export class Controls {
     panel.querySelector('#fcFG').checked = cfg.fg;
     panel.querySelector('#fcSR').checked = cfg.sr;
     panel.querySelector('#fcShowFps').checked = cfg.showFps;
+    panel.querySelector('#fcShowBar').checked = cfg.showBar !== false;
     panel.querySelector('#fcWatermark').checked = cfg.showWatermark;
     panel.querySelector('#fcWarnings').checked = cfg.showWarnings;
     const hdr = panel.querySelector('#fcHDR');

@@ -7,7 +7,7 @@ const SCHEMA_VERSION = 5;
 const STORE_KEY = 'fcProfileStore';
 const SETTINGS_KEYS = Object.freeze([
   'factor', 'targetFps', 'fpsLimit', 'anime', 'debug', 'res', 'hoverReveal', 'compare',
-  'fg', 'sr', 'hdr', 'sharpness', 'pictureMode', 'showFps', 'showWatermark', 'showWarnings', 'subtitleOverlay', 'guard', 'fillDisplay',
+  'fg', 'sr', 'hdr', 'sharpness', 'pictureMode', 'showFps', 'showWatermark', 'showWarnings', 'showBar', 'subtitleOverlay', 'guard', 'fillDisplay',
   'limitToDisplay', 'motionAdaptive', 'periodicRepair', 'cadenceSmoothing', 'renderCubic',
 ]);
 const OUTPUT_RATES = Object.freeze(['auto', 'hz', 'target', 2, 3, 4, 5, 6]);
@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   showFps: true,
   showWatermark: true,
   showWarnings: true,
+  showBar: true,
   subtitleOverlay: true,
   guard: true,
   fillDisplay: false,
@@ -138,6 +139,7 @@ function sanitizeSettings(value = {}) {
     showFps: booleanValue(source.showFps, DEFAULT_SETTINGS.showFps),
     showWatermark: booleanValue(source.showWatermark, DEFAULT_SETTINGS.showWatermark),
     showWarnings: booleanValue(source.showWarnings, DEFAULT_SETTINGS.showWarnings),
+    showBar: booleanValue(source.showBar, DEFAULT_SETTINGS.showBar),
     subtitleOverlay: booleanValue(source.subtitleOverlay, DEFAULT_SETTINGS.subtitleOverlay),
     guard: booleanValue(source.guard, DEFAULT_SETTINGS.guard),
     fillDisplay: booleanValue(source.fillDisplay, DEFAULT_SETTINGS.fillDisplay),

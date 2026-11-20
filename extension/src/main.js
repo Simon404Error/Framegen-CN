@@ -47,7 +47,7 @@ export function boot() {
     const cfg = settings.cfg;
     const video = player.video;
     if (!controls) return;
-    if (cfg.hoverReveal && (video.controls || !SITE_CONTROLS_OK)) {
+    if (cfg.hoverReveal && cfg.showBar !== false && (video.controls || !SITE_CONTROLS_OK)) {
       bar.layout(rect, now < controls.revealUntil, now);
     } else {
       bar.hide();
