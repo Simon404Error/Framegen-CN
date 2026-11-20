@@ -184,7 +184,6 @@ export function boot() {
   // The recommend feed of douyin.com swaps its video element and resets the player on paths where neither the URL
   // changes nor a teardown event reaches us, so the enable silently dies. The watchdog re-arms it; a manual stop on
   // the current clip is respected until the clip changes (URL change or video swap).
-  let feedWanted = false;
   let feedWatchdogVideo = null;
   let feedStoppedByUser = false;
   setInterval(() => {
@@ -201,9 +200,13 @@ export function boot() {
       // A video element that left the DOM (or the stream the canvas rides on) means the clip changed: re-arm.
       if (feedWatchdogVideo !== v) { feedWatchdogVideo = v; feedStoppedByUser = false; }
       if (!player.isRunning() && !toggling && !feedStoppedByUser && v?.videoWidth) {
+        // show the rail right away: schedulePlacement() refuses to run while hidden, so the only way back from
+        // setVisible(false) is a direct place() — which ends in setVisible(true)
+        controls?.revealFor(2500);
+        controls?.place(v.getBoundingClientRect(), v);
         toggling = true;
         player.start(v)
-          .then(() => { if (player.isRunning()) { controls?.revealFor(2500); controls?.schedulePlacement(); } })
+          .then(() => { if (player.isRunning()) controls?.place(v.getBoundingClientRect(), v); })
           .catch(e => { player.preparing(false); log('feed watchdog', e); })
           .finally(() => { toggling = false; });
       }
