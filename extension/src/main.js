@@ -106,7 +106,8 @@ export function boot() {
     if (!controls) injectUI();
     toggling = true;
     try {
-      if (player.isRunning()) { player.stop(); return; }
+      if (player.isRunning()) { player.stop(); if (inFeed()) feedStoppedByUser = true; return; }
+      feedStoppedByUser = false;
       const video = biggestVideo();
       if (!video) { notices.showCritical('Framegen：未找到视频'); return; }
       try { await player.start(video); }
@@ -180,14 +181,31 @@ export function boot() {
   }
 
   let pageHref = location.href;
+  // The recommend feed of douyin.com swaps its video element and resets the player on paths where neither the URL
+  // changes nor a teardown event reaches us, so the enable silently dies. The watchdog re-arms it; a manual stop on
+  // the current clip is respected until the clip changes (URL change or video swap).
+  let feedWanted = false;
+  let feedWatchdogVideo = null;
+  let feedStoppedByUser = false;
   setInterval(() => {
-    // SPA navigation: the old stream is dead and its frames on the new page are nonsense. Off; the viewer re-enables,
-    // except inside feeds, where the enable carries to the next clip.
     if (location.href !== pageHref) {
       pageHref = location.href;
+      feedStoppedByUser = false;
       if (player.isRunning()) {
         player.stop();
         if (inFeed()) reattach();
+      }
+    }
+    if (inFeed()) {
+      const v = biggestVideo();
+      // A video element that left the DOM (or the stream the canvas rides on) means the clip changed: re-arm.
+      if (feedWatchdogVideo !== v) { feedWatchdogVideo = v; feedStoppedByUser = false; }
+      if (!player.isRunning() && !toggling && !feedStoppedByUser && v?.videoWidth) {
+        toggling = true;
+        player.start(v)
+          .then(() => { if (player.isRunning()) { controls?.revealFor(2500); controls?.schedulePlacement(); } })
+          .catch(e => { player.preparing(false); log('feed watchdog', e); })
+          .finally(() => { toggling = false; });
       }
     }
     if (!controls) return;

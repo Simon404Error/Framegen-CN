@@ -6,7 +6,8 @@
 export const SITE_CONTROLS_OK = /(^|\.)(youtube\.com|youtu\.be|vimeo\.com|twitch\.tv)$/.test(location.hostname);
 
 // Vertical feeds: every scroll is an SPA navigation to the next clip, and the enable carries over to it.
-export const inFeed = () => /youtube\.com\/shorts|tiktok\.com/.test(location.href);
+// douyin.com is the Chinese TikTok (same infinite vertical feed).
+export const inFeed = () => /youtube\.com\/shorts|tiktok\.com|douyin\.com/.test(location.href);
 
 export function keepTwitchControlsAboveOverlay() {
   if (!/(^|\.)twitch\.tv$/.test(location.hostname)) return;
