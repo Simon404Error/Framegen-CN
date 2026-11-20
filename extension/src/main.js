@@ -12,6 +12,14 @@ import { svgIcon } from './ui/icons.js';
 import { SITE_CONTROLS_OK, inFeed, keepTwitchControlsAboveOverlay, biggestVideo } from './sites.js';
 import { installBenchBridge, benchToken } from './bench.js';
 
+// Should Framegen turn itself on for this page without a click? The viewer lists hostnames (and suffixes of them)
+// in the settings; one entry covers every subdomain. Manual stops win: anything the viewer closed by hand on this
+// page load is not reopened.
+function hostMatchesAutoEnable(host, sites) {
+  host = (host || '').toLowerCase().replace(/^www\./, '');
+  return sites.some(site => host === site || host.endsWith('.' + site));
+}
+
 export const VERSION = chrome.runtime.getManifest().version;
 
 export function boot() {
@@ -25,6 +33,10 @@ export function boot() {
   let split = null;
   let toggling = false;
   let hoverVideo = null, hoverScanAt = -1e9, mouseMoveAt = -1e9, preloadFailedAt = -1e9;
+  // Auto-enable: this page load's list, whether the viewer stopped it by hand, and the watch loop.
+  let autoSites = [];
+  let autoStoppedByUser = false;
+  let autoTimer = 0;
 
   const activeVideo = () => (player.isRunning() ? player.video : hoverVideo);
 
@@ -106,12 +118,43 @@ export function boot() {
     if (!controls) injectUI();
     toggling = true;
     try {
-      if (player.isRunning()) { player.stop(); return; }
+      if (player.isRunning()) { player.stop(); autoStoppedByUser = true; return; }
       const video = biggestVideo();
       if (!video) { notices.showCritical('Framegen：未找到视频'); return; }
       try { await player.start(video); }
       catch (e) { player.preparing(false); notices.showCritical('Framegen 错误：' + (e?.message || e)); if (!player.blocked) log(e); }
     } finally { toggling = false; }
+  }
+
+  // ---------- auto-enable on listed sites ----------
+  // Once the listed page has a video, start without a click. SPA navigation and feed clips are covered by the same
+  // poll: a fresh video on a listed page is started, one the viewer stopped by hand is left alone.
+  function autoEnableWanted() {
+    return autoSites.length > 0
+      && !autoStoppedByUser
+      && !player.isRunning()
+      && hostMatchesAutoEnable(location.hostname, autoSites);
+  }
+
+  function autoEnableTick() {
+    if (!autoEnableWanted()) return;
+    const video = biggestVideo();
+    if (!video) return;
+    if (!controls) injectUI();
+    toggling = true;
+    player.start(video)
+      .catch(e => { if (!player.blocked) log('auto enable', e); })
+      .finally(() => { toggling = false; });
+  }
+
+  function scheduleAutoEnable() {
+    if (autoTimer) return;
+    autoTimer = setInterval(() => {
+      if (!autoEnableWanted()) return;
+      // wait until a real (decoded) video exists, then start
+      const video = biggestVideo();
+      if (video) autoEnableTick();
+    }, 1000);
   }
 
   // Fullscreen renders in the browser's top layer: anything not inside the fullscreen element is invisible there.
@@ -167,7 +210,8 @@ export function boot() {
   function reattach() {
     const seq = ++reattachSeq, t0 = performance.now();
     const tick = async () => {
-      if (seq !== reattachSeq || player.isRunning() || !inFeed()) return;
+      if (seq !== reattachSeq || player.isRunning() || !(inFeed() || hostMatchesAutoEnable(location.hostname, autoSites))) return;
+      if (autoStoppedByUser) return;
       if (performance.now() - t0 > 12000) return;
       const v = biggestVideo();
       if (!v || !v.videoWidth || toggling) { setTimeout(tick, 150); return; }
@@ -182,12 +226,13 @@ export function boot() {
   let pageHref = location.href;
   setInterval(() => {
     // SPA navigation: the old stream is dead and its frames on the new page are nonsense. Off; the viewer re-enables,
-    // except inside feeds, where the enable carries to the next clip.
+    // except inside feeds or on auto-enable sites, where the enable carries to the next clip.
     if (location.href !== pageHref) {
       pageHref = location.href;
       if (player.isRunning()) {
         player.stop();
-        if (inFeed()) reattach();
+        autoStoppedByUser = false;
+        if (inFeed() || hostMatchesAutoEnable(location.hostname, autoSites)) reattach();
       }
     }
     if (!controls) return;
@@ -216,6 +261,17 @@ export function boot() {
   settings.onChange(({ changed }) => {
     controls?.syncPanel();
     player.applySettings(changed);
+  });
+
+  // pick up the auto-enable list at boot and on every change
+  autoSites = settings.cfg.autoEnableSites || [];
+  if (autoSites.length) scheduleAutoEnable();
+  settings.onChange(({ cfg }) => {
+    const next = cfg.autoEnableSites || [];
+    const wasEmpty = autoSites.length === 0;
+    autoSites = next;
+    if (autoSites.length) scheduleAutoEnable();
+    else if (!wasEmpty) { clearInterval(autoTimer); autoTimer = 0; }
   });
 
   // ---------- the toolbar popup ----------

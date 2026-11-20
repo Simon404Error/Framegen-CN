@@ -192,6 +192,48 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     mark(links[0].hash.slice(1));
   }
 
+  // The auto-enable site list: chips plus an add box. It is part of the draft, so Apply/Reset/preview state and the
+  // storage sync all treat it like any other setting.
+  function renderAutoEnableSites() {
+    const list = $('autoEnableSites');
+    list.replaceChildren(...draftSettings.autoEnableSites.map(site => {
+      const chip = document.createElement('span');
+      chip.className = 'site-chip';
+      const label = document.createElement('span');
+      label.textContent = site;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.setAttribute('aria-label', `移除 ${site}`);
+      remove.onclick = () => {
+        readForm();
+        draftSettings.autoEnableSites = draftSettings.autoEnableSites.filter(item => item !== site);
+        renderAutoEnableSites();
+        renderStatus();
+      };
+      chip.append(label, remove);
+      return chip;
+    }));
+  }
+
+  function addAutoEnableSite() {
+    const input = $('autoEnableInput');
+    const site = Profiles.sanitizeAutoEnableSites([input.value])[0];
+    if (!site) { input.reportValidity?.(); return; }
+    readForm();
+    if (!draftSettings.autoEnableSites.includes(site)) draftSettings.autoEnableSites.push(site);
+    input.value = '';
+    renderAutoEnableSites();
+    renderStatus();
+  }
+
+  function bindAutoEnableSiteEditor() {
+    $('addAutoEnableSite').addEventListener('click', addAutoEnableSite);
+    $('autoEnableInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); addAutoEnableSite(); }
+    });
+  }
+
   function readForm() {
     const candidate = {
       factor: $('factor').value,
@@ -203,11 +245,16 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     };
     for (const key of BOOLEAN_FIELDS) candidate[key] = $(key).checked;
     draftSettings = settingsCopy(candidate);
+    if (!Array.isArray(draftSettings.autoEnableSites)) draftSettings.autoEnableSites = [];
     updateRateControlVisibility(draftSettings.factor);
+    renderAutoEnableSites();
   }
 
   function writeForm(settings) {
     const clean = Profiles.sanitizeSettings(settings);
+    if (!Array.isArray(clean.autoEnableSites)) clean.autoEnableSites = [];
+    draftSettings = settingsCopy(clean);
+    draftSettings.autoEnableSites = [...clean.autoEnableSites];
     $('factor').value = String(clean.factor);
     $('targetFps').value = String(clean.targetFps);
     $('fpsLimit').value = String(Profiles.fpsLimitPresetIndex(clean.fpsLimit));
@@ -218,6 +265,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     for (const key of BOOLEAN_FIELDS) $(key).checked = clean[key];
     syncChoices();
     updateRateControlVisibility(clean.factor);
+    renderAutoEnableSites();
   }
 
   function renderProfileSelect() {
@@ -542,6 +590,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       lastMessage = '';
       renderStatus();
     });
+    bindAutoEnableSiteEditor();
     $('profileSelect').addEventListener('change', event => selectProfile(event.target.value));
     $('newProfile').addEventListener('click', () => openProfileDialog('new'));
     $('duplicateProfile').addEventListener('click', () => openProfileDialog('duplicate'));

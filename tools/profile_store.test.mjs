@@ -34,6 +34,7 @@ const customSettings = Object.freeze({
   periodicRepair: false,
   cadenceSmoothing: false,
   renderCubic: false,
+  autoEnableSites: ['bilibili.com'],
 });
 
 test('picture modes roundtrip through saved profiles without altering motion settings', () => {

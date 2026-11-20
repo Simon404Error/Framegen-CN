@@ -8,8 +8,9 @@ const STORE_KEY = 'fcProfileStore';
 const SETTINGS_KEYS = Object.freeze([
   'factor', 'targetFps', 'fpsLimit', 'anime', 'debug', 'res', 'hoverReveal', 'compare',
   'fg', 'sr', 'hdr', 'sharpness', 'pictureMode', 'showFps', 'showWatermark', 'showWarnings', 'showBar', 'subtitleOverlay', 'guard', 'fillDisplay',
-  'limitToDisplay', 'motionAdaptive', 'periodicRepair', 'cadenceSmoothing', 'renderCubic',
+  'limitToDisplay', 'motionAdaptive', 'periodicRepair', 'cadenceSmoothing', 'renderCubic', 'autoEnableSites',
 ]);
+const AUTO_ENABLE_SITES_MAX = 64;
 const OUTPUT_RATES = Object.freeze(['auto', 'hz', 'target', 2, 3, 4, 5, 6]);
 const RESOLUTIONS = Object.freeze([288, 360, 480, 720, 1080]);
 const TARGET_FPS_MIN = 2;
@@ -45,6 +46,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   periodicRepair: true,
   cadenceSmoothing: false,
   renderCubic: true,
+  autoEnableSites: [],
 });
 const LEGACY_CURRENT_PROFILE = Object.freeze({
   id: 'current-settings',
@@ -114,6 +116,26 @@ function sanitizeFactor(value) {
     : DEFAULT_SETTINGS.factor;
 }
 
+// The auto-enable site list: hostnames the viewer wants Framegen to turn itself on for. Entries are cleaned to bare
+// registrable-ish hostnames ('www.bilibili.com' -> 'bilibili.com'); a match is suffix-based, so one entry covers
+// every subdomain and path.
+function sanitizeAutoEnableSites(value) {
+  const raw = Array.isArray(value) ? value : [];
+  const cleaned = [];
+  const seen = new Set();
+  for (const entry of raw) {
+    if (typeof entry !== 'string') continue;
+    let host = entry.trim().toLowerCase();
+    if (!host) continue;
+    host = host.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '');
+    if (!/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(host) || seen.has(host)) continue;
+    seen.add(host);
+    cleaned.push(host);
+    if (cleaned.length >= AUTO_ENABLE_SITES_MAX) break;
+  }
+  return cleaned;
+}
+
 function sanitizeSettings(value = {}) {
   const source = value && typeof value === 'object' ? value : {};
   const numericResolution = Number(source.res);
@@ -148,6 +170,7 @@ function sanitizeSettings(value = {}) {
     periodicRepair: booleanValue(source.periodicRepair, DEFAULT_SETTINGS.periodicRepair),
     cadenceSmoothing: booleanValue(source.cadenceSmoothing, DEFAULT_SETTINGS.cadenceSmoothing),
     renderCubic: booleanValue(source.renderCubic, DEFAULT_SETTINGS.renderCubic),
+    autoEnableSites: sanitizeAutoEnableSites(source.autoEnableSites),
   };
 }
 
@@ -163,7 +186,11 @@ function pickFlatSettings(storage = {}) {
 function settingsEqual(left, right) {
   const a = sanitizeSettings(left);
   const b = sanitizeSettings(right);
-  return SETTINGS_KEYS.every(key => a[key] === b[key]);
+  return SETTINGS_KEYS.every(key => {
+    const va = a[key], vb = b[key];
+    if (Array.isArray(va) || Array.isArray(vb)) return JSON.stringify(va) === JSON.stringify(vb);
+    return va === vb;
+  });
 }
 
 function normalizeText(value, fallback, maxLength) {
@@ -426,6 +453,7 @@ export const Profiles = Object.freeze({
   ProfileStoreError,
   UnsupportedProfileStoreVersionError,
   sanitizeSettings,
+  sanitizeAutoEnableSites,
   sanitizeTargetFps,
   sanitizeFpsLimit,
   sanitizeFactor,

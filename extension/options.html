@@ -298,6 +298,18 @@
             </div>
             <input id="subtitleOverlay" name="subtitleOverlay" class="switch" type="checkbox" aria-describedby="subtitleOverlayHint">
           </div>
+
+          <div class="setting-row setting-row-stack">
+            <div class="setting-copy">
+              <label for="autoEnableInput">自动开启补帧的网站</label>
+              <p id="autoEnableHint">在这些网站上打开视频时自动开启补帧，换视频后自动延续。输入域名（如 bilibili.com）后回车添加。</p>
+            </div>
+            <div class="site-list" id="autoEnableSites"></div>
+            <div class="site-add">
+              <input id="autoEnableInput" name="autoEnableInput" type="text" placeholder="例：bilibili.com" autocomplete="off">
+              <button id="addAutoEnableSite" class="button button-quiet" type="button">添加</button>
+            </div>
+          </div>
         </section>
 
         <section id="diagnostics" class="settings-section" aria-labelledby="diagnosticsHeading">
