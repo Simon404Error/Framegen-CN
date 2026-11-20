@@ -49,7 +49,7 @@ export function boot() {
       onStateChange: running => controls?.setActive(running),
       onPreparing: on => controls?.setPreparing(on),
       onStatus: () => { if (controls?.isPanelOpen()) controls.updateStatus(); },
-      onVideoGone: () => { if (inFeed()) reattach(); },
+      onVideoGone: () => { if (inFeed() || hostMatchesAutoEnable(location.hostname, autoSites)) reattach(); },
       onUiTick: (now, rect) => uiTick(now, rect),
     },
   });
