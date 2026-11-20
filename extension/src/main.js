@@ -14,6 +14,12 @@ import { installBenchBridge, benchToken } from './bench.js';
 
 export const VERSION = chrome.runtime.getManifest().version;
 
+// One storage key holds the hostnames the viewer chose to have Framegen start on: turning the rail on remembers the
+// site, turning it off forgets it. A page load reads it before deciding anything, so a site visited later starts on
+// its own and a site turned off stays off — across videos, tabs and browser restarts.
+const AUTO_HOSTS_KEY = 'fcAutoHosts';
+const AUTO_HOSTS_MAX = 200;
+
 export function boot() {
   const bench = benchToken();
   const settings = createSettings({ live: !bench, log });
@@ -25,6 +31,46 @@ export function boot() {
   let split = null;
   let toggling = false;
   let hoverVideo = null, hoverScanAt = -1e9, mouseMoveAt = -1e9, preloadFailedAt = -1e9;
+
+  // ---------- per-site auto-start ----------
+  const siteHost = () => (location.hostname || '').toLowerCase().replace(/^www\./, '');
+  let autoHosts = [];
+  // Read from storage before any watchdog decides anything: "listed" is the viewer's standing choice for this site.
+  let autoEnabled = false;
+  // The viewer's intent for the clips of a vertical feed, kept across them (declared here because the storage
+  // callbacks below can touch it before the feed watchdog is set up).
+  let feedWanted = false;
+
+  function applyAutoHosts(list) {
+    autoHosts = list;
+    const listed = !!siteHost() && list.includes(siteHost());
+    if (listed) autoEnabled = true;
+    else if (autoEnabled) {
+      // Forgotten while this tab stayed open: stop here too, not only on the next load.
+      autoEnabled = false;
+      feedWanted = false;
+      if (player.isRunning()) player.stop();
+    }
+  }
+
+  function rememberAutoHost(enabled) {
+    const host = siteHost();
+    if (!host) return;
+    const next = autoHosts.filter(item => item !== host);
+    if (enabled) next.push(host);
+    autoHosts = next.slice(-AUTO_HOSTS_MAX);
+    try { chrome.storage.local.set({ [AUTO_HOSTS_KEY]: autoHosts }); } catch { /* storage unavailable */ }
+  }
+
+  function loadAutoHosts() {
+    if (bench) return; // benchmark runs leave the viewer's stored choices alone
+    try {
+      chrome.storage.local.get(AUTO_HOSTS_KEY, snapshot => {
+        try { applyAutoHosts(Array.isArray(snapshot?.[AUTO_HOSTS_KEY]) ? snapshot[AUTO_HOSTS_KEY] : []); }
+        catch (e) { log('auto hosts', e); }
+      });
+    } catch { /* storage unavailable in this frame */ }
+  }
 
   const activeVideo = () => (player.isRunning() ? player.video : hoverVideo);
 
@@ -111,11 +157,15 @@ export function boot() {
     try {
       if (player.isRunning()) {
         player.stop();
-        // The viewer turned it off: that intent carries to the next clips of this page.
+        // The viewer turned it off: remember that for this whole site and for the following clips of this page.
         if (inFeed()) feedWanted = false;
+        autoEnabled = false;
+        rememberAutoHost(false);
         return;
       }
-      // Turning it on by hand is the intent that makes the following clips start on their own.
+      // Turning it on by hand makes this site start on its own from now on (and the following clips of this page).
+      autoEnabled = true;
+      rememberAutoHost(true);
       if (inFeed()) feedWanted = true;
       const video = biggestVideo();
       if (!video) { notices.showCritical('Framegen：未找到视频'); return; }
@@ -193,10 +243,6 @@ export function boot() {
   }
 
   let pageHref = location.href;
-  // feedWanted is the viewer's intent for this page: false on a fresh load (nothing turns itself on), set by the
-  // rail button, and kept across the clips of a vertical feed — so following clips inherit it, the same way the
-  // enable already carried over. Nothing here starts generation without it.
-  let feedWanted = false;
   let feedWatchdogVideo = null;
   setInterval(() => {
     if (location.href !== pageHref) {
@@ -208,9 +254,25 @@ export function boot() {
         if (inFeed()) reattach();
       }
     }
+    // A plain page load: no feed, nothing in the DOM yet knows it should start. Listed sites start on their own the
+    // moment a decoded video is in view — that is the whole of the opt-in, and it costs one start per page.
+    if (autoEnabled && !inFeed() && !player.isRunning() && !toggling) {
+      const v = biggestVideo();
+      if (v?.videoWidth) {
+        controls?.revealFor(2500);
+        controls?.place(v.getBoundingClientRect(), v);
+        toggling = true;
+        player.start(v)
+          .then(() => { if (player.isRunning()) controls?.place(v.getBoundingClientRect(), v); })
+          .catch(e => { player.preparing(false); log('auto start', e); })
+          .finally(() => { toggling = false; });
+      }
+    }
     if (inFeed()) {
       const v = biggestVideo();
       if (feedWatchdogVideo !== v) feedWatchdogVideo = v;
+      // In a feed the intent for this site also becomes the intent for its clips: a listed site needs no click.
+      if (autoEnabled && !feedWanted) feedWanted = true;
       // A vertical feed keeps the old clip's <video> in the DOM when the next one is scrolled in, so the player stays
       // "running" on a video that is now off-screen: no teardown, no isRunning() flip, and the rail trails the old
       // element upward. The clip changed whenever the element on screen is not the one being generated.
@@ -293,6 +355,14 @@ export function boot() {
   } catch { /* messaging unavailable in some frames */ }
 
   // ---------- boot ----------
+  loadAutoHosts();
+  // Another tab (or the popup) changing the list applies here too, without a reload.
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !Object.hasOwn(changes, AUTO_HOSTS_KEY)) return;
+      applyAutoHosts(Array.isArray(changes[AUTO_HOSTS_KEY].newValue) ? changes[AUTO_HOSTS_KEY].newValue : []);
+    });
+  } catch { /* storage unavailable in this frame */ }
   const observer = new MutationObserver(() => mount());
   const mount = () => {
     if (controls) { observer.disconnect(); return; }
