@@ -55,7 +55,10 @@ export function boot() {
     bar.update();
     notices.layout(rect, { hud: cfg.debug || cfg.showFps, watermark: cfg.showWatermark });
     notices.warn(player.warningText(player.report()), now, rect, cfg.showWarnings);
-    if (controls.isVisible()) controls.place(rect, video);
+    // place() is the one call that both positions and re-reveals the rail, so it must not be gated on isVisible():
+    // a feed that briefly shrinks the video rect hides the rail, and a gated call could then never bring it back
+    // (a vertical feed scrolls with the mouse still, so no mousemove follows to do it either).
+    controls.place(rect, video);
     split.layout(rect, cfg.compare);
   }
 
@@ -215,6 +218,14 @@ export function boot() {
     if (controls.isPanelOpen()) {
       controls.revealFor(2000);
       controls.schedulePlacement();
+      return;
+    }
+    // In a vertical feed the clip is scrolled with the mouse held still, so no mousemove arrives to keep the reveal
+    // alive and the rail used to be hidden two seconds after the swap — with nothing left to bring it back. While
+    // generation runs there, keep the rail revealed and repositioned from this poll instead.
+    if (inFeed() && player.isRunning()) {
+      controls.revealFor(1000);
+      controls.place(player.lastRect || player.video?.getBoundingClientRect(), player.video);
       return;
     }
     if (controls.isVisible()) controls.schedulePlacement();
