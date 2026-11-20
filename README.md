@@ -2,8 +2,13 @@
 
 <img src="docs/media/logo.png" width="96" alt="Framegen">
 
-# Framegen
+# Framegen-CN
 
+**[English](#smooth-video-in-your-browser) | [简体中文](#中文说明)**
+
+---
+
+<a id="smooth-video-in-your-browser"></a>
 **Smooth video in your browser.** An extension that turns 24 to 30 fps video into 60 to 240 fps in real time, with a
 neural network running on your GPU. No servers, no accounts, nothing leaves your computer.
 
@@ -15,6 +20,9 @@ neural network running on your GPU. No servers, no accounts, nothing leaves your
 <img src="docs/media/hero.gif" width="880" alt="15 fps source vs Framegen x4 interpolation, side by side">
 
 </div>
+
+> This fork adds a Simplified Chinese localization of the extension UI on top of the upstream
+> [MONZikWasTaken/Framegen](https://github.com/MONZikWasTaken/Framegen) project. Install instructions are unchanged.
 
 ## What it does
 
@@ -39,6 +47,8 @@ Manual install: download `framegen-extension.zip` from the
 [latest release](https://github.com/MONZikWasTaken/Framegen/releases/latest), extract it, open `chrome://extensions`,
 enable **Developer mode**, click **Load unpacked** and select the extracted folder. Firefox: `framegen-firefox.zip`
 from the same release, loaded through `about:debugging` until it is listed on AMO.
+
+To get the Chinese UI, load the `extension/` folder of this repository instead of the release zip.
 
 Requirements: **Chrome or Edge 121+** (Windows, macOS with Apple Silicon, Linux) or **Firefox 141+ on Windows**, and
 a GPU with WebGPU support. GPUs without `shader-f16` run the engine's f32 kernels, slower but the same picture.
@@ -108,3 +118,87 @@ are trained on rented cloud GPUs paid out of pocket. If Framegen made your video
 Code: **MIT** ([LICENSE](LICENSE)). Model weights: the FlyHighFG weights under
 [CC BY-NC 4.0](extension/engine/WEIGHTS_LICENSE.md); the previous engine's weights for personal and research use
 ([WEIGHTS_LICENSE.md](WEIGHTS_LICENSE.md)).
+
+---
+
+<a id="中文说明"></a>
+
+<div align="center">
+
+# Framegen-CN（简体中文版）
+
+**让浏览器中的视频更流畅。** 这是一个把 24–30 fps 视频实时补帧到 60–240 fps 的浏览器扩展，神经网络在你的 GPU 上运行。
+无服务器、无账号，任何数据都不会离开你的电脑。
+
+</div>
+
+> 本 fork 在上游 [MONZikWasTaken/Framegen](https://github.com/MONZikWasTaken/Framegen) 的基础上对扩展界面做了简体中文汉化。
+
+## 功能
+
+- 为任意 `<video>` 提供 **2–6 倍补帧**：电影、剧集、体育、动画、录屏；支持 YouTube 和大多数视频网站
+- **自动模式**：自动选择 GPU 和显示器能承受的最高倍率，并在出现卡顿前自动回落
+- **动画模式**：识别"一拍二/一拍三"的手绘帧并对真实运动插帧；可选的节奏平滑把每张原画的步进均匀分布到其停留的所有帧上
+- **匹配显示器与自定义 FPS**：让输出精确落在显示器刷新率或你指定帧率的网格上
+- **对比滑块**：左侧原始画面，右侧补帧画面
+- **隐私安全**：整个流程都在你的 GPU 上运行，不收集任何数据
+
+自 2.0 起，补帧由 [FlyHigh 引擎](https://github.com/getflyhigh/flyhigh-engine)驱动：FlyHighFG 网络（78 万参数）
+及其 WGSL 内核编译为 WebAssembly，由引擎的 Pacer 决定每个显示时钟呈现哪一帧。在中端 GPU 上，生成一帧约需 1 毫秒。
+
+## 安装
+
+手动安装：打开 `chrome://extensions`，开启**开发者模式**，点击**加载已解压的扩展程序**，选择本仓库的 `extension/` 文件夹（即中文界面版本）。
+也可从[上游最新 Release](https://github.com/MONZikWasTaken/Framegen/releases/latest) 下载 `framegen-extension.zip`（英文界面）。
+
+系统要求：**Chrome 或 Edge 121+**（Windows、Apple Silicon macOS、Linux）或 **Windows 上的 Firefox 141+**，
+以及支持 WebGPU 的显卡。不支持 `shader-f16` 的 GPU 会回退到 f32 内核，速度更慢但画质相同。
+
+## 使用方法
+
+1. 打开任意视频并把鼠标悬停上去：播放器左缘会出现 **FG** 按钮。
+2. 点击它。按钮变绿、出现帧率读数，视频开始补帧；再次点击关闭。
+3. 其下两个按钮打开播放器内的面板：**画面**（滤镜、锐化、超分、HDR）和快速设置。**高级设置**（或扩展弹窗中）可打开带配置档案的完整设置页。
+
+| 设置 | 说明 |
+|---|---|
+| **输出帧率** | `自动` 适配 GPU 与显示器，可设 FPS 上限。`匹配显示器` 和 `自定义 FPS` 精确对齐帧率网格；固定 2–6 倍直接乘以源帧率。**限制为显示器刷新率**（默认开）把屏幕刷新率作为上限，关闭后 GPU 按其算力尽量生成。**运动自适应自动**（默认开）在快速场景减少生成帧数 |
+| **画质** | 网络运行分辨率。`均衡` 是模型原生规格；更高占用更多 GPU 时间且画质很少更好 |
+| **动画模式** | 停留帧检测与强化的重复图案修复；看动画建议保持开启 |
+| **动画节奏平滑** | 实验性，默认关。一拍二/一拍三的步进变为滑动；每一帧都成为生成的中间帧，大步进看起来更柔和；需要一帧源前瞻 |
+| **画面模式** | 叠加在视频上的色彩与细节风格：影院、影院（明亮）、黑色电影、鲜艳、运动、细节增强。`原画` 不做任何修改 |
+| **超分辨率** | 播放器大于视频时，对每个呈现帧做 2 倍神经超分 |
+| **字幕保护** | 最近几帧未变化的像素（内嵌字幕、台标）直接取自源帧 |
+| **对比** | 分屏对比滑块 |
+
+完整设置页的配置档案可保存任意多套设置；已有设置会无损迁移。
+
+**首次测试建议**：任何 24 fps 片源——缓慢摇镜头的电影场景、动画 OP。60 Hz 屏幕上是 24 到 60；
+144–240 Hz 屏幕上提升更多。
+
+## 常见问题
+
+**提示"未找到视频" / 按钮不出现。** 确认视频正在播放。部分播放器上按钮只在鼠标位于视频上方时出现。
+
+**Netflix、Crunchyroll 上能用吗？** 不能：DRM 保护的视频对扩展天然不可见，浏览器只会给出黑帧。YouTube 和大多数其他站点正常。
+
+**帧率计数低于我选的倍率。** 自动模式会适配 GPU 的真实算力余量，绝不为凑数字而卡顿；固定倍率同样会被限制。
+想要更高请降低画质或倍率。
+
+**面板提示该网站禁止 WebAssembly。** 少数站点（已核实的有 reddit.com）下发的安全策略会被 Chrome 同样应用到扩展的
+WebAssembly 上，Framegen 无法在此运行；Firefox 不受影响。
+
+**会偷偷联网吗？** 不会。没有服务器、没有遥测、没有统计；代码就在这里供你检查。
+
+## 支持项目
+
+Framegen 由一位开发者用一块中端 GPU 构建。扩展免费且将一直免费；背后的模型是在自费租用的云端 GPU 上训练的。
+如果 Framegen 让你的视频更流畅，欢迎支持原作者：
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/monzikxd)
+
+## 许可证
+
+代码：**MIT**（[LICENSE](LICENSE)）。模型权重：FlyHighFG 权重遵循
+[CC BY-NC 4.0](extension/engine/WEIGHTS_LICENSE.md)；上一代引擎权重供个人与研究使用
+（[WEIGHTS_LICENSE.md](WEIGHTS_LICENSE.md)）。
