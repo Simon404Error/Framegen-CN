@@ -14,9 +14,9 @@ const ENGINE_URLS = {
   graph: url('engine/graph.json'), manifest: url('engine/flyhighfg.json'), weights: url('engine/flyhighfg.bin'),
 };
 const SR_URLS = { module: url('rt/sr.js'), weights: url('assets/rt_sr.bin'), manifest: url('assets/rt_sr.json') };
-const BLOCKED_MESSAGE = "This site's security policy forbids WebAssembly for extensions, so Framegen cannot run here";
-const GPU_HELP = 'WebGPU is off. Enable "Use graphics acceleration" in the browser settings, restart the browser and update the GPU driver. Very old GPUs are not supported.';
-const NO_ADAPTER_HELP = 'The browser gives WebGPU no GPU right now. Restart the browser (after a driver reset, for example when a game crashed, it stays off until then); if it persists, check that WebGPU is hardware accelerated on chrome://gpu and update the GPU driver.';
+const BLOCKED_MESSAGE = "该网站的安全策略禁止扩展使用 WebAssembly，因此 Framegen 无法在此运行";
+const GPU_HELP = 'WebGPU 未开启。请在浏览器设置中启用"使用图形加速"，重启浏览器并更新显卡驱动。不支持非常老的 GPU。';
+const NO_ADAPTER_HELP = '浏览器当前无法为 WebGPU 提供 GPU。请重启浏览器（例如游戏崩溃导致驱动重置后，WebGPU 会保持关闭直到重启）；如果仍然出现，请在 chrome://gpu 检查 WebGPU 是否为硬件加速，并更新显卡驱动。';
 const MAX_INPUTS = 24, MAX_OUTPUTS = 20;
 // an output not named by a present within this time after its due was dropped or superseded: the slot is free again
 const OUTPUT_HOLD_MS = 250;
@@ -142,7 +142,7 @@ export class Player {
       const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
       if (!adapter) return;
       const info = adapter.info || {};
-      this.sys.gpu = info.description || [info.vendor, info.architecture].filter(Boolean).join(' ') || 'unknown GPU';
+      this.sys.gpu = info.description || [info.vendor, info.architecture].filter(Boolean).join(' ') || '未知 GPU';
       this.sys.f16 = adapter.features.has('shader-f16');
       this.sys.integrated = isIntegrated(this.sys.gpu);
     } catch { /* leave unknown */ }
@@ -447,7 +447,7 @@ export class Player {
         this.probe(video);
       } catch (e) {
         if (isCorsError(e)) {
-          this.notices.showCritical('Framegen: the video lacks CORS, reloading it');
+          this.notices.showCritical('Framegen：视频缺少 CORS 支持，正在重新加载');
           await makeReadable(video, log);
           if (epoch !== this.epoch || this.video !== video) return;
           try { this.probe(video); } catch (e2) { log('probe skipped', e2.name || e2); }
@@ -473,8 +473,8 @@ export class Player {
     if (!this.needsCanvas()) { this.overlay.passthrough(); this.preparing(false); }
     this.notices.setHud('', this.cfg.debug || this.cfg.showFps);
     if (this.sys.integrated) {
-      this.notices.advise(`Chrome is running on the integrated GPU (${this.sys.gpu}). For full speed: `
-        + 'Windows Settings → Display → Graphics → Chrome → High performance, then restart Chrome.', 14000);
+      this.notices.advise(`Chrome 正在核显（${this.sys.gpu}）上运行。如需全速：`
+        + 'Windows 设置 → 屏幕 → 显示卡 → Chrome → 高性能，然后重启 Chrome。', 14000);
     }
     this.hooks.onStateChange(true);
     this.armVideoFrames(epoch);
@@ -607,7 +607,7 @@ export class Player {
       if (e?.name === 'OperationError') {
         log('frame skipped (decoder gap)');
       } else if (isCorsError(e)) {
-        this.fail('Framegen: the video is not readable (CORS)', e);
+        this.fail('Framegen：视频不可读取（CORS）', e);
       } else {
         this.fail('Framegen error: ' + (e?.message || e), e);
       }
@@ -771,18 +771,18 @@ export class Player {
     this.overlay.hideInstant();
     if (!wasRunning || !video?.isConnected || this.recovering) { this.hooks.onStateChange(false); return; }
     this.recovering = true;
-    this.notices.showCritical('Framegen: GPU reset detected, recovering');
+    this.notices.showCritical('Framegen：检测到 GPU 重置，正在恢复');
     try {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           await this.ensureBackend();
           await this.start(video);
-          if (this.running) { this.notices.advise('GPU connection restored', 3500); return; }
+          if (this.running) { this.notices.advise('GPU 连接已恢复', 3500); return; }
         } catch (e) {
           log('recovery attempt failed', e);
         }
       }
-      this.notices.showCritical('Framegen: GPU recovery failed, reload this page');
+      this.notices.showCritical('Framegen：GPU 恢复失败，请刷新此页面');
       this.hooks.onStateChange(false);
     } finally {
       this.recovering = false;
@@ -796,10 +796,10 @@ export class Player {
 
   rateLabel() {
     const c = this.cfg;
-    if (c.factor === 'auto') return c.fpsLimit !== null ? `Auto · max ${Number(c.fpsLimit.toFixed(2))} FPS` : 'Auto';
-    if (c.factor === 'hz') return 'Match display';
-    if (c.factor === 'target') return `Custom ${Number(c.targetFps.toFixed(2))} FPS`;
-    return `${c.factor}× source`;
+    if (c.factor === 'auto') return c.fpsLimit !== null ? `自动 · 上限 ${Number(c.fpsLimit.toFixed(2))} FPS` : '自动';
+    if (c.factor === 'hz') return '匹配显示器';
+    if (c.factor === 'target') return `自定义 ${Number(c.targetFps.toFixed(2))} FPS`;
+    return `${c.factor}× 源帧率`;
   }
 
   rateState(r) {
@@ -807,7 +807,7 @@ export class Player {
     const plan = r?.plan;
     if (!plan || plan.state === 'factor') return label;
     const hz = plan.output_hz ? ` (~${Number(plan.output_hz.toFixed(2))} FPS)` : '';
-    if (plan.state === 'measuring') return `${label} · measuring`;
+    if (plan.state === 'measuring') return `${label} · 正在测量`;
     if (!plan.interpolation_allowed) return `${label} · ${plan.warning || plan.state.replace(/_/g, ' ')}`;
     if (plan.clamp) return `${label}${hz} · ${plan.clamp.replace(/_/g, ' ')}`;
     return `${label}${hz}`;
@@ -818,16 +818,16 @@ export class Player {
   warningText(r) {
     const c = this.cfg;
     if (!c.fg || !r) return null;
-    if (this.source?.path === 'canvas') return 'This Firefox version is too old for smooth frame generation: update Firefox';
+    if (this.source?.path === 'canvas') return '此 Firefox 版本过旧，无法流畅补帧：请更新 Firefox';
     const presents = Math.max(1, this.stats.fpsWin.length);
     const dropping = (this.stats.dropWin.length / 2) / presents > 0.12;
     const fixed = typeof c.factor === 'number';
-    if (fixed && dropping) return 'Frames are dropping: lower the output rate or the quality, or switch to Auto';
+    if (fixed && dropping) return '正在丢帧：请降低输出帧率或画质，或切换到自动';
     const plan = r.plan;
-    if (c.factor === 'auto' && plan?.state === 'no_two_x_gpu') return 'The GPU cannot keep up even at 2x: lower the quality';
+    if (c.factor === 'auto' && plan?.state === 'no_two_x_gpu') return 'GPU 即使在 2 倍下也无法跟上：请降低画质';
     if (plan?.warning && !['measuring', 'factor'].includes(plan.state)
         && !['display', 'minimum', 'runtime'].includes(plan.clamp)) return plan.warning;
-    if (fixed && this.stats.factor > 1 && this.stats.factor < c.factor) return `The GPU sustains ${this.stats.factor}× at this quality, not ${c.factor}×`;
+    if (fixed && this.stats.factor > 1 && this.stats.factor < c.factor) return `该画质下 GPU 只能维持 ${this.stats.factor}×，而非 ${c.factor}×`;
     return null;
   }
 
@@ -854,25 +854,25 @@ export class Player {
     const r = this.report();
     const video = this.video || this.hooks.candidateVideo();
     const srNeeded = !this.spec || Upscaler.needed(this.spec.width, this.spec.height, this.overlay.width, this.overlay.height);
-    const srState = c.sr ? (!this.backend?.f16 && this.backend ? 'unavailable (no f16)' : !this.upscaler?.ready ? 'loading' : srNeeded ? 'on x2' : 'ready, not needed at this size') : 'off';
+    const srState = c.sr ? (!this.backend?.f16 && this.backend ? '不可用（无 f16）' : !this.upscaler?.ready ? '加载中' : srNeeded ? '开启 ×2' : '就绪，该尺寸下不需要') : '关';
     const lines = [
-      `GPU: ${this.sys.gpu}${this.sys.integrated ? ' ⚠ INTEGRATED' : ''}`,
-      `engine: ${this.backend ? this.backend.class : (this.blocked ? 'unavailable (' + this.blocked + ')' : 'not loaded')}`,
-      `FG: ${c.fg ? 'on' : 'OFF'} · upscale: ${srState}`,
-      `source: ${video?.videoWidth ? `${video.videoWidth}×${video.videoHeight}` : 'unknown'}`,
-      `output rate: ${this.rateState(r)}`,
-      `HDR: ${!this.sys.hdrOk ? 'display not HDR' : (c.hdr ? (this.sys.hdrOn ? 'on' : 'failed, SDR') : 'off')}`,
-      `sharpness: ${c.sharpness === 0 ? 'off' : c.sharpness}`,
-      `status: ${this.running ? 'running' : 'stopped'}`,
+      `GPU：${this.sys.gpu}${this.sys.integrated ? ' ⚠ 核显' : ''}`,
+      `引擎：${this.backend ? this.backend.class : (this.blocked ? '不可用（' + this.blocked + '）' : '未加载')}`,
+      `补帧：${c.fg ? '开' : '关'} · 超分：${srState}`,
+      `源视频：${video?.videoWidth ? `${video.videoWidth}×${video.videoHeight}` : '未知'}`,
+      `输出帧率：${this.rateState(r)}`,
+      `HDR：${!this.sys.hdrOk ? '显示器不支持 HDR' : (c.hdr ? (this.sys.hdrOn ? '开' : '失败，已回退 SDR') : '关')}`,
+      `锐化：${c.sharpness === 0 ? '关' : c.sharpness}`,
+      `状态：${this.running ? '运行中' : '已停止'}`,
     ];
     if (this.running && r) {
       const pool = this.spec ? this.spec.width * this.spec.height * 4 * (this.stream?.report().inputs + this.stream?.report().outputs) / 1048576 : 0;
       lines.push(
-        `out: ${this.stats.fpsWin.length}fps · factor ×${this.stats.factor}`,
-        `display: ${r.display.display_hz}Hz · source: ${r.source_hz ? r.source_hz.toFixed(2) : '?'}fps`,
-        `pair: ${r.pair_cost_ms.toFixed(1)}ms · mid: ${r.mid_cost_ms.toFixed(1)}ms @ ${c.res}p · present: ${r.present_cost_ms.toFixed(1)}ms`,
-        `delay: ${r.delay_ms.toFixed(0)}ms · drops: ${this.stats.drops} · queue: ${r.queued}`,
-        `VRAM pool: ~${pool.toFixed(0)}MB${this.spec?.video ? ' · video mode (lookahead)' : ''}`);
+        `输出：${this.stats.fpsWin.length}fps · 倍率 ×${this.stats.factor}`,
+        `显示器：${r.display.display_hz}Hz · 源：${r.source_hz ? r.source_hz.toFixed(2) : '?'}fps`,
+        `成对：${r.pair_cost_ms.toFixed(1)}ms · 中间帧：${r.mid_cost_ms.toFixed(1)}ms @ ${c.res}p · 呈现：${r.present_cost_ms.toFixed(1)}ms`,
+        `延迟：${r.delay_ms.toFixed(0)}ms · 丢帧：${this.stats.drops} · 队列：${r.queued}`,
+        `显存池：约 ${pool.toFixed(0)}MB${this.spec?.video ? ' · 视频模式（前瞻）' : ''}`);
     }
     return lines;
   }

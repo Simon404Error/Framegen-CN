@@ -27,9 +27,9 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
   let profileStoreReadOnly = false;
   let profileStoreError = '';
 
-  function enterProfileStoreReadOnly(error, status = 'Profile storage is read-only') {
+  function enterProfileStoreReadOnly(error, status = '配置存储为只读') {
     profileStoreReadOnly = true;
-    profileStoreError = error?.message || 'Profiles are read-only';
+    profileStoreError = error?.message || '配置为只读';
     $('runtimeStatus').textContent = status;
     $('editState').textContent = profileStoreError;
     for (const id of STORE_MUTATION_CONTROLS) $(id).disabled = true;
@@ -90,7 +90,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
   function updateFpsLimitPresentation() {
     const input = $('fpsLimit');
     const value = fpsLimitFromSlider();
-    const label = value === null ? 'Unlimited' : `${value} FPS`;
+    const label = value === null ? '无限制' : `${value} FPS`;
     const ratio = Number(input.value) / Math.max(1, FPS_LIMIT_PRESETS.length - 1);
     input.style.setProperty('--fill', `${ratio * 100}%`);
     input.setAttribute('aria-valuetext', label);
@@ -127,7 +127,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     if (draftSettings.factor !== 'target') return true;
     if ($('targetFps').checkValidity()) return true;
     $('targetFps').reportValidity();
-    lastMessage = 'Enter a Custom FPS from 2 to 1000';
+    lastMessage = '自定义 FPS 需在 2 到 1000 之间';
     renderStatus();
     return false;
   }
@@ -223,12 +223,12 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
   function renderProfileSelect() {
     const current = document.createElement('option');
     current.value = '';
-    current.textContent = 'Current settings';
+    current.textContent = '当前设置';
     const children = [current];
     const profiles = Profiles.profileList(store);
     if (profiles.length > 0) {
       const group = document.createElement('optgroup');
-      group.label = 'My profiles';
+      group.label = '我的配置';
       for (const profile of profiles) {
         const option = document.createElement('option');
         option.value = profile.id;
@@ -243,8 +243,8 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
 
   function renderStatus() {
     if (profileStoreReadOnly) {
-      $('runtimeStatus').textContent = 'Profile storage is read-only';
-      $('editState').textContent = profileStoreError || 'Profiles are read-only';
+      $('runtimeStatus').textContent = '配置存储为只读';
+      $('editState').textContent = profileStoreError || '配置为只读';
       for (const id of STORE_MUTATION_CONTROLS) $(id).disabled = true;
       return;
     }
@@ -254,11 +254,11 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       && Profiles.settingsEqual(lastApplied.settings, runtimeSettings);
 
     if (lastAppliedMatches) {
-      $('runtimeStatus').innerHTML = `Current: <strong>${escapeHtml(lastApplied.name)}</strong>`;
+      $('runtimeStatus').innerHTML = `当前：<strong>${escapeHtml(lastApplied.name)}</strong>`;
     } else if (lastApplied) {
-      $('runtimeStatus').innerHTML = `<strong>Current settings</strong> · changed after ${escapeHtml(lastApplied.name)}`;
+      $('runtimeStatus').innerHTML = `<strong>当前设置</strong> · 已在 ${escapeHtml(lastApplied.name)} 之后被修改`;
     } else {
-      $('runtimeStatus').innerHTML = 'Current: <strong>Custom settings</strong>';
+      $('runtimeStatus').innerHTML = '当前：<strong>自定义设置</strong>';
     }
 
     const hasDraftEdits = !Profiles.settingsEqual(draftSettings, draftOrigin);
@@ -271,22 +271,22 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       : pendingRuntimeChange;
 
     if (externalChangeNotice) {
-      $('editState').textContent = 'Changed in another tab';
+      $('editState').textContent = '已在其他标签页中修改';
     } else if (lastMessage) {
       $('editState').textContent = lastMessage;
     } else if (hasDraftEdits || selectedModified) {
-      $('editState').textContent = 'Unsaved preview';
+      $('editState').textContent = '未保存的预览';
     } else if (selected && pendingApply) {
-      $('editState').textContent = `Previewing ${selected.name}`;
+      $('editState').textContent = `正在预览 ${selected.name}`;
     } else {
-      $('editState').textContent = 'Up to date';
+      $('editState').textContent = '已是最新';
     }
 
     $('resetDraft').disabled = !externalChangeNotice && !hasDraftEdits;
     $('applySettings').disabled = !pendingApply;
     $('saveProfile').hidden = !selected;
     $('saveProfile').disabled = !selected || !selectedModified;
-    $('saveProfile').textContent = 'Save profile';
+    $('saveProfile').textContent = '保存配置';
     for (const id of ['renameProfile', 'deleteProfile', 'duplicateProfile']) {
       $(id).disabled = !selected;
       $(id).hidden = !selected;
@@ -314,7 +314,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
   }
 
   async function persistStore(nextStore = store) {
-    if (profileStoreReadOnly) throw new Profiles.ProfileStoreError('Profiles are read-only');
+    if (profileStoreReadOnly) throw new Profiles.ProfileStoreError('配置为只读');
     await chrome.storage.local.set({ [Profiles.STORE_KEY]: nextStore });
     store = nextStore;
     storageSnapshot[Profiles.STORE_KEY] = nextStore;
@@ -341,10 +341,10 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
         : settingsCopy(draftSettings);
       draftSource = selected ? 'profile' : 'current';
       externalChangeNotice = false;
-      lastMessage = 'Settings applied';
+      lastMessage = '设置已应用';
       renderAll();
     } catch {
-      lastMessage = 'Could not apply settings';
+      lastMessage = '无法应用设置';
       renderStatus();
     }
   }
@@ -355,9 +355,9 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     const selected = currentProfile();
     dialogMode = mode;
     const titles = {
-      new: ['New profile', 'Create', 'Custom profile'],
-      duplicate: ['Duplicate profile', 'Create copy', selected ? `${selected.name} copy` : 'Profile copy'],
-      rename: ['Rename profile', 'Rename', selected?.name || 'Custom profile'],
+      new: ['新建配置', '创建', '自定义配置'],
+      duplicate: ['复制配置', '创建副本', selected ? `${selected.name} 副本` : '配置副本'],
+      rename: ['重命名配置', '重命名', selected?.name || '自定义配置'],
     };
     const [title, action, value] = titles[mode];
     $('profileDialogTitle').textContent = title;
@@ -373,7 +373,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     if (profileStoreReadOnly) return;
     const name = Profiles.normalizeName($('profileName').value, '');
     if (!name) {
-      $('profileName').setCustomValidity('Enter a profile name.');
+      $('profileName').setCustomValidity('请输入配置名称。');
       $('profileName').reportValidity();
       return;
     }
@@ -401,12 +401,12 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
         draftSource = 'profile';
       }
       $('profileDialog').close();
-      lastMessage = dialogMode === 'rename' ? 'Profile renamed' : 'Profile saved';
+      lastMessage = dialogMode === 'rename' ? '配置已重命名' : '配置已保存';
       externalChangeNotice = false;
       renderAll({ write: true });
       $('profileSelect').focus();
     } catch (error) {
-      $('profileName').setCustomValidity(error?.message || 'Could not save this profile.');
+      $('profileName').setCustomValidity(error?.message || '无法保存该配置。');
       $('profileName').reportValidity();
     }
   }
@@ -428,10 +428,10 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       draftOrigin = settingsCopy(draftSettings);
       draftSource = 'profile';
       externalChangeNotice = false;
-      lastMessage = 'Profile saved';
+      lastMessage = '配置已保存';
       renderAll();
     } catch {
-      lastMessage = 'Could not save profile';
+      lastMessage = '无法保存配置';
       renderStatus();
     }
   }
@@ -440,7 +440,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     if (profileStoreReadOnly) return;
     const selected = currentProfile();
     if (!selected) return;
-    $('deleteDialogCopy').textContent = `“${selected.name}” will be removed. Current video settings will stay unchanged.`;
+    $('deleteDialogCopy').textContent = `“${selected.name}”将被移除。当前视频设置保持不变。`;
     $('deleteDialog').showModal();
     $('cancelDelete').focus();
   }
@@ -456,11 +456,11 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       loadCurrentDraft();
       $('deleteDialog').close();
       externalChangeNotice = false;
-      lastMessage = 'Profile deleted';
+      lastMessage = '配置已删除';
       renderAll({ write: true });
       $('profileSelect').focus();
     } catch {
-      lastMessage = 'Could not delete profile';
+      lastMessage = '无法删除配置';
       renderStatus();
     }
   }
@@ -496,7 +496,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
         if (loaded.needsWrite) {
           const migratedStore = loaded.store;
           chrome.storage.local.set({ [Profiles.STORE_KEY]: migratedStore })
-            .catch(error => enterProfileStoreReadOnly(error, 'Could not update profiles'));
+            .catch(error => enterProfileStoreReadOnly(error, '无法更新配置'));
         }
       } catch (error) {
         enterProfileStoreReadOnly(error);
@@ -574,7 +574,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       renderAll();
       if (loaded.needsWrite) await persistStore();
     } catch (error) {
-      enterProfileStoreReadOnly(error, 'Settings unavailable');
+      enterProfileStoreReadOnly(error, '设置不可用');
     }
   }
 

@@ -14,7 +14,7 @@ function render(s) {
   const dot = $('dot'), state = $('state'), stat = $('stat'), sys = $('sys');
   if (!s) {
     dot.classList.remove('on');
-    state.textContent = 'Off';
+    state.textContent = '关闭';
     state.className = '';
     stat.textContent = '';
     sys.textContent = '';
@@ -22,16 +22,16 @@ function render(s) {
   }
   $('ver').textContent = 'v' + s.version;
   dot.classList.toggle('on', s.running);
-  state.textContent = s.running ? 'Running' : 'Off';
+  state.textContent = s.running ? '运行中' : '关闭';
   state.className = s.running ? 'on' : '';
   stat.textContent = s.running
-    ? `Output   ${s.fps} fps · ×${s.factor}\n`
-      + `Rate     ${s.rateState}\n`
-      + `Render   ${s.midMs} ms at ${s.res}p · ${s.drops} dropped\n`
-      + `Engine   ${s.engine || '-'}`
+    ? `输出     ${s.fps} fps · ×${s.factor}\n`
+      + `帧率模式 ${s.rateState}\n`
+      + `渲染     ${s.midMs} ms @ ${s.res}p · 丢帧 ${s.drops}\n`
+      + `引擎     ${s.engine || '-'}`
     : (s.blocked || '');
-  sys.textContent = `GPU: ${s.gpu || '-'}${s.f16 ? '' : ' · no half-float support'}`
-    + (s.integrated ? '\nIntegrated GPU in use. Assign the browser to the discrete one: Windows Settings → Display → Graphics.' : '');
+  sys.textContent = `GPU：${s.gpu || '-'}${s.f16 ? '' : ' · 不支持半精度浮点'}`
+    + (s.integrated ? '\n正在使用核显。请在 Windows 设置 → 屏幕 → 显示卡中把浏览器指派给独显。' : '');
   sys.className = s.integrated ? 'warn' : '';
 }
 

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Framegen settings</title>
+  <title>Framegen 设置</title>
   <link rel="stylesheet" href="options.css">
   <script type="module" src="options.js"></script>
 </head>
@@ -12,12 +12,12 @@
     <div class="brand">
       <span class="brand-dot" aria-hidden="true"></span>
       <strong>Framegen</strong>
-      <h1>Settings</h1>
+      <h1>设置</h1>
       <span class="version" id="version"></span>
     </div>
     <div class="header-actions">
-      <div id="runtimeStatus" class="runtime-status" role="status" aria-live="polite">Loading settings…</div>
-      <a class="engine-link" href="https://github.com/getflyhigh/flyhigh-engine" target="_blank" rel="noopener noreferrer">Powered by <b>FlyHigh engine</b></a>
+      <div id="runtimeStatus" class="runtime-status" role="status" aria-live="polite">正在加载设置…</div>
+      <a class="engine-link" href="https://github.com/getflyhigh/flyhigh-engine" target="_blank" rel="noopener noreferrer">由 <b>FlyHigh 引擎</b>驱动</a>
       <a class="icon-link" href="https://github.com/MONZikWasTaken/Framegen"
         target="_blank" rel="noopener noreferrer" aria-label="Open Framegen on GitHub">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -28,50 +28,50 @@
   </header>
 
   <div class="app-shell">
-    <nav class="side-nav" aria-label="Sections">
-      <a href="#generation" data-nav>Frame generation</a>
-      <a href="#motion" data-nav>Motion</a>
-      <a href="#picture" data-nav>Picture</a>
-      <a href="#player" data-nav>Player</a>
-      <a href="#diagnostics" data-nav>Diagnostics</a>
+    <nav class="side-nav" aria-label="分区">
+      <a href="#generation" data-nav>补帧生成</a>
+      <a href="#motion" data-nav>运动</a>
+      <a href="#picture" data-nav>画面</a>
+      <a href="#player" data-nav>播放器</a>
+      <a href="#diagnostics" data-nav>诊断</a>
     </nav>
 
     <main class="workspace">
       <div class="profile-toolbar">
-        <label for="profileSelect">Profile</label>
+        <label for="profileSelect">配置</label>
         <select id="profileSelect" aria-describedby="runtimeStatus"></select>
-        <div class="profile-actions" aria-label="Profile actions">
-          <button id="duplicateProfile" class="button button-quiet" type="button">Duplicate</button>
-          <button id="renameProfile" class="button button-quiet" type="button">Rename</button>
-          <button id="deleteProfile" class="button button-danger" type="button">Delete</button>
-          <button id="newProfile" class="button" type="button">New profile</button>
+        <div class="profile-actions" aria-label="配置操作">
+          <button id="duplicateProfile" class="button button-quiet" type="button">复制</button>
+          <button id="renameProfile" class="button button-quiet" type="button">重命名</button>
+          <button id="deleteProfile" class="button button-danger" type="button">删除</button>
+          <button id="newProfile" class="button" type="button">新建配置</button>
         </div>
       </div>
 
       <form id="settingsForm" novalidate>
         <section id="generation" class="settings-section" aria-labelledby="generationHeading">
           <div class="section-heading">
-            <h2 id="generationHeading">Frame generation</h2>
-            <p>How many frames are generated and how they are paced.</p>
+            <h2 id="generationHeading">补帧生成</h2>
+            <p>生成多少帧以及如何安排播放节奏。</p>
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="fg">Frame generation</label>
-              <p id="fgHint">Generate in-between frames while a video plays.</p>
+              <label for="fg">补帧生成</label>
+              <p id="fgHint">视频播放时生成中间帧。</p>
             </div>
             <input id="fg" name="fg" class="switch" type="checkbox" aria-describedby="fgHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="factor">Output rate</label>
-              <p id="factorHint">Auto picks the smoothest rate your display and GPU can hold.</p>
+              <label for="factor">输出帧率</label>
+              <p id="factorHint">"自动"会选择你的显示器和 GPU 能流畅承受的最高帧率。</p>
             </div>
             <select id="factor" name="factor" aria-describedby="factorHint">
-              <option value="auto">Auto · recommended</option>
-              <option value="hz">Match display</option>
-              <option value="target">Custom FPS</option>
+              <option value="auto">自动 · 推荐</option>
+              <option value="hz">匹配显示器</option>
+              <option value="target">自定义 FPS</option>
               <option value="2">2× source</option>
               <option value="3">3× source</option>
               <option value="4">4× source</option>
@@ -82,8 +82,8 @@
 
           <div id="targetFpsRow" class="setting-row" hidden>
             <div class="setting-copy">
-              <label for="targetFps">Custom FPS</label>
-              <p id="targetFpsHint">2–1000. Stays at least 2× the source and within what the display and GPU allow.</p>
+              <label for="targetFps">自定义 FPS</label>
+              <p id="targetFpsHint">2–1000。至少为源帧率的 2 倍，且不超过显示器和 GPU 允许的范围。</p>
             </div>
             <input id="targetFps" name="targetFps" class="number-input" type="number"
               min="2" max="1000" step="0.01" inputmode="decimal" aria-describedby="targetFpsHint">
@@ -91,13 +91,13 @@
 
           <div id="fpsLimitRow" class="setting-row setting-row-range" hidden>
             <div class="setting-copy">
-              <label for="fpsLimit">FPS limit</label>
-              <p id="fpsLimitHint">A ceiling for Auto. It may run lower to stay smooth.</p>
+              <label for="fpsLimit">FPS 上限</label>
+              <p id="fpsLimitHint">"自动"模式的上限。为了保证流畅，实际帧率可能更低。</p>
             </div>
             <div class="range-control">
-              <span id="fpsLimitValue" class="range-value">Unlimited</span>
+              <span id="fpsLimitValue" class="range-value">无限制</span>
               <input id="fpsLimit" name="fpsLimit" type="range" min="0" max="17"
-                step="1" value="17" aria-label="FPS limit" aria-valuetext="Unlimited"
+                step="1" value="17" aria-label="FPS 上限" aria-valuetext="无限制"
                 aria-describedby="fpsLimitHint fpsLimitValue">
               <span id="fpsLimitScale" class="range-scale" aria-hidden="true"></span>
             </div>
@@ -105,85 +105,85 @@
 
           <div id="fillDisplayRow" class="setting-row" hidden>
             <div class="setting-copy">
-              <label for="fillDisplay">Full refresh rate</label>
-              <p id="fillDisplayHint">Use the display's measured refresh rate instead of 97% of it.</p>
+              <label for="fillDisplay">满额刷新率</label>
+              <p id="fillDisplayHint">使用显示器实测刷新率，而不是它的 97%。</p>
             </div>
             <input id="fillDisplay" name="fillDisplay" class="switch" type="checkbox" aria-describedby="fillDisplayHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="limitToDisplay">Limit to display refresh rate</label>
-              <p id="limitToDisplayHint">Never generate more frames than the screen can show. Off: generate as many as the GPU allows; the counter then reports generated frames.</p>
+              <label for="limitToDisplay">限制为显示器刷新率</label>
+              <p id="limitToDisplayHint">生成的帧不超过屏幕能显示的数量。关闭：按 GPU 允许的速率生成，计数器会报告已生成的帧数。</p>
             </div>
             <input id="limitToDisplay" name="limitToDisplay" class="switch" type="checkbox" aria-describedby="limitToDisplayHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="motionAdaptive">Motion-adaptive Auto</label>
-              <p id="motionAdaptiveHint">Auto generates fewer frames on fast scenes, where artifacts would show. Off: always the highest rate the GPU allows.</p>
+              <label for="motionAdaptive">运动自适应自动</label>
+              <p id="motionAdaptiveHint">自动模式在快速场景（容易出现伪影）会减少生成帧数。关闭：始终以 GPU 允许的最高帧率生成。</p>
             </div>
             <input id="motionAdaptive" name="motionAdaptive" class="switch" type="checkbox" aria-describedby="motionAdaptiveHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="res">Quality</label>
-              <p id="resHint">The size the network runs at. Balanced is its native scale; higher costs more GPU time and rarely looks better.</p>
+              <label for="res">画质</label>
+              <p id="resHint">网络模型运行的分辨率。"均衡"是其原生规格；更高会占用更多 GPU 时间，且画质很少更好。</p>
             </div>
             <select id="res" name="res" aria-describedby="resHint">
-              <option value="288">Low power · 288p</option>
-              <option value="360">Efficient · 360p</option>
-              <option value="480">Balanced · 480p</option>
-              <option value="720">High · 720p</option>
-              <option value="1080">Ultra · 1080p</option>
+              <option value="288">低功耗 · 288p</option>
+              <option value="360">高效 · 360p</option>
+              <option value="480">均衡 · 480p</option>
+              <option value="720">高 · 720p</option>
+              <option value="1080">极致 · 1080p</option>
             </select>
           </div>
         </section>
 
         <section id="motion" class="settings-section" aria-labelledby="motionHeading">
           <div class="section-heading">
-            <h2 id="motionHeading">Motion</h2>
-            <p>How generated frames handle animation, patterns and on-screen text.</p>
+            <h2 id="motionHeading">运动</h2>
+            <p>生成帧如何处理动画、图案和屏幕文字。</p>
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="anime">Animation mode</label>
-              <p id="animeHint">For drawn content: frames the animation repeats are not blended into the next drawing.</p>
+              <label for="anime">动画模式</label>
+              <p id="animeHint">适用于手绘内容：动画重复的帧不会与下一张原画混合。</p>
             </div>
             <input id="anime" name="anime" class="switch" type="checkbox" aria-describedby="animeHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="cadenceSmoothing">Anime cadence smoothing <span class="badge">Experimental</span></label>
-              <p id="cadenceSmoothingHint">With Animation mode. Spreads animation drawn on twos and threes evenly over the frames each drawing is held for, so motion slides instead of stepping. Every shown frame is then generated; can look soft or wrong on fast action.</p>
+              <label for="cadenceSmoothing">动画节奏平滑 <span class="badge">实验性</span></label>
+              <p id="cadenceSmoothingHint">需配合动画模式。把手绘动画中"二作画/三作画"（一张原画停留多帧）的帧均匀分布到原画停留的每一帧，让运动变得平滑而不是步进。此后每一帧都是生成的；在快速动作画面可能显得发虚或异常。</p>
             </div>
             <input id="cadenceSmoothing" name="cadenceSmoothing" class="switch" type="checkbox" aria-describedby="cadenceSmoothingHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="periodicRepair">Repeating-pattern repair</label>
-              <p id="periodicRepairHint">Re-checks motion on fences, railings and window grids, which can double during pans. Stronger with Animation mode. Small GPU cost.</p>
+              <label for="periodicRepair">重复图案修复</label>
+              <p id="periodicRepairHint">对栅栏、栏杆、窗格等在镜头平移时可能翻倍的重复图案重新检查运动。配合动画模式效果更强。少量 GPU 开销。</p>
             </div>
             <input id="periodicRepair" name="periodicRepair" class="switch" type="checkbox" aria-describedby="periodicRepairHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="guard">Subtitle protection</label>
-              <p id="guardHint">Burnt-in subtitles, logos and HUDs are taken from the source frames instead of moving with the picture behind them.</p>
+              <label for="guard">字幕保护</label>
+              <p id="guardHint">内嵌字幕、台标和 HUD 直接取自源帧，而不会随其背后的画面一起移动。</p>
             </div>
             <input id="guard" name="guard" class="switch" type="checkbox" aria-describedby="guardHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="renderCubic">Sharper edges</label>
-              <p id="renderCubicHint">Bicubic sampling for generated frames: crisper edges, hair and texture. About 0.2 ms per generated frame.</p>
+              <label for="renderCubic">更锐利的边缘</label>
+              <p id="renderCubicHint">对生成帧使用双三次采样：边缘、发丝和纹理更清晰。每生成一帧约多耗 0.2 毫秒。</p>
             </div>
             <input id="renderCubic" name="renderCubic" class="switch" type="checkbox" aria-describedby="renderCubicHint">
           </div>
@@ -191,23 +191,23 @@
 
         <section id="picture" class="settings-section" aria-labelledby="pictureHeading">
           <div class="section-heading">
-            <h2 id="pictureHeading">Picture</h2>
-            <p>Looks and image processing applied to what you see.</p>
+            <h2 id="pictureHeading">画面</h2>
+            <p>应用于观看画面的滤镜和图像处理。</p>
           </div>
 
           <div class="setting-row setting-row-stack">
             <div class="setting-copy">
-              <label id="pictureModeLabel" for="pictureMode">Picture mode</label>
-              <p id="pictureModeHint">A color and detail look on top of the video. Detail Boost sharpens and adds the 2× upscale where it applies.</p>
+              <label id="pictureModeLabel" for="pictureMode">画面模式</label>
+              <p id="pictureModeHint">叠加在视频上的色彩与细节风格。"细节增强"会锐化并在适用时附加 2 倍超分。</p>
             </div>
             <select id="pictureMode" name="pictureMode" class="choice-source" tabindex="-1" aria-hidden="true">
-              <option value="original">Original</option>
-              <option value="cinema">Cinema</option>
-              <option value="cinema-home">Cinema Home</option>
-              <option value="noir">Noir</option>
-              <option value="vivid">Vivid</option>
-              <option value="sports">Sports</option>
-              <option value="detail">Detail Boost</option>
+              <option value="original">原画</option>
+              <option value="cinema">影院</option>
+              <option value="cinema-home">影院（明亮）</option>
+              <option value="noir">黑色电影</option>
+              <option value="vivid">鲜艳</option>
+              <option value="sports">运动</option>
+              <option value="detail">细节增强</option>
             </select>
             <div class="look-grid" data-choice="pictureMode" role="radiogroup"
               aria-labelledby="pictureModeLabel" aria-describedby="pictureModeHint"></div>
@@ -215,14 +215,14 @@
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label id="sharpnessLabel" for="sharpness">Sharpness</label>
-              <p id="sharpnessHint">Edge enhancement. High can create halos.</p>
+              <label id="sharpnessLabel" for="sharpness">锐化</label>
+              <p id="sharpnessHint">边缘增强。"高"可能产生光晕。</p>
             </div>
             <select id="sharpness" name="sharpness" class="choice-source" tabindex="-1" aria-hidden="true">
-              <option value="0">Off</option>
-              <option value="1">Low</option>
-              <option value="2">Medium</option>
-              <option value="3">High</option>
+              <option value="0">关</option>
+              <option value="1">低</option>
+              <option value="2">中</option>
+              <option value="3">高</option>
             </select>
             <div class="segmented" data-choice="sharpness" role="radiogroup"
               aria-labelledby="sharpnessLabel" aria-describedby="sharpnessHint"></div>
@@ -230,8 +230,8 @@
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="sr">Upscale</label>
-              <p id="srHint">2× neural upscaling when the player is larger than the video.</p>
+              <label for="sr">超分辨率</label>
+              <p id="srHint">当播放器大于视频时进行 2 倍神经超分。</p>
             </div>
             <input id="sr" name="sr" class="switch" type="checkbox" aria-describedby="srHint">
           </div>
@@ -239,7 +239,7 @@
           <div class="setting-row">
             <div class="setting-copy">
               <label for="hdr">HDR</label>
-              <p id="hdrHint">Brighter highlights on an HDR display.</p>
+              <p id="hdrHint">在 HDR 显示器上呈现更亮的高光。</p>
             </div>
             <input id="hdr" name="hdr" class="switch" type="checkbox" aria-describedby="hdrHint">
           </div>
@@ -247,46 +247,46 @@
 
         <section id="player" class="settings-section" aria-labelledby="playerHeading">
           <div class="section-heading">
-            <h2 id="playerHeading">Player</h2>
-            <p>What Framegen shows over the video.</p>
+            <h2 id="playerHeading">播放器</h2>
+            <p>Framegen 在视频上显示的内容。</p>
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="hoverReveal">Hover controls</label>
-              <p id="hoverRevealHint">Show the Framegen buttons when the pointer is over a video.</p>
+              <label for="hoverReveal">悬停控件</label>
+              <p id="hoverRevealHint">指针悬停在视频上时显示 Framegen 按钮。</p>
             </div>
             <input id="hoverReveal" name="hoverReveal" class="switch" type="checkbox" aria-describedby="hoverRevealHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="showFps">FPS counter</label>
-              <p id="showFpsHint">Output frame rate and render time in the corner.</p>
+              <label for="showFps">FPS 计数器</label>
+              <p id="showFpsHint">在角落显示输出帧率和渲染耗时。</p>
             </div>
             <input id="showFps" name="showFps" class="switch" type="checkbox" aria-describedby="showFpsHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="showWatermark">Watermark</label>
-              <p id="showWatermarkHint">The Framegen label while generation is on.</p>
+              <label for="showWatermark">水印</label>
+              <p id="showWatermarkHint">补帧开启时在视频上显示 Framegen 标签。</p>
             </div>
             <input id="showWatermark" name="showWatermark" class="switch" type="checkbox" aria-describedby="showWatermarkHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="showWarnings">Warnings</label>
-              <p id="showWarningsHint">Performance notices. Errors are always shown.</p>
+              <label for="showWarnings">警告</label>
+              <p id="showWarningsHint">性能提示。错误始终显示。</p>
             </div>
             <input id="showWarnings" name="showWarnings" class="switch" type="checkbox" aria-describedby="showWarningsHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="subtitleOverlay">Subtitle overlay</label>
-              <p id="subtitleOverlayHint">Keep the player's subtitles above generated frames.</p>
+              <label for="subtitleOverlay">字幕悬浮层</label>
+              <p id="subtitleOverlayHint">让播放器的字幕保持在生成帧之上。</p>
             </div>
             <input id="subtitleOverlay" name="subtitleOverlay" class="switch" type="checkbox" aria-describedby="subtitleOverlayHint">
           </div>
@@ -294,22 +294,22 @@
 
         <section id="diagnostics" class="settings-section" aria-labelledby="diagnosticsHeading">
           <div class="section-heading">
-            <h2 id="diagnosticsHeading">Diagnostics</h2>
-            <p>Tools for checking what Framegen does.</p>
+            <h2 id="diagnosticsHeading">诊断</h2>
+            <p>用于检查 Framegen 运行情况的工具。</p>
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="compare">Compare</label>
-              <p id="compareHint">Split view: the original on the left, the processed picture on the right.</p>
+              <label for="compare">对比</label>
+              <p id="compareHint">分屏视图：左侧为原始画面，右侧为处理后的画面。</p>
             </div>
             <input id="compare" name="compare" class="switch" type="checkbox" aria-describedby="compareHint">
           </div>
 
           <div class="setting-row">
             <div class="setting-copy">
-              <label for="debug">Debug overlay</label>
-              <p id="debugHint">A border around the processed area and detailed runtime numbers.</p>
+              <label for="debug">调试悬浮层</label>
+              <p id="debugHint">在处理区域周围显示边框，并显示详细的运行数据。</p>
             </div>
             <input id="debug" name="debug" class="switch" type="checkbox" aria-describedby="debugHint">
           </div>
@@ -317,11 +317,11 @@
       </form>
 
       <div class="action-bar">
-        <strong id="editState" role="status" aria-live="polite">Up to date</strong>
+        <strong id="editState" role="status" aria-live="polite">已是最新</strong>
         <div class="action-buttons">
-          <button id="resetDraft" class="button button-quiet" type="button">Reset</button>
-          <button id="saveProfile" class="button button-secondary" type="button">Save profile</button>
-          <button id="applySettings" class="button button-primary" type="button">Apply</button>
+          <button id="resetDraft" class="button button-quiet" type="button">重置</button>
+          <button id="saveProfile" class="button button-secondary" type="button">保存配置</button>
+          <button id="applySettings" class="button button-primary" type="button">应用</button>
         </div>
       </div>
     </main>
@@ -329,23 +329,23 @@
 
   <dialog id="profileDialog" aria-labelledby="profileDialogTitle">
     <form id="profileDialogForm" method="dialog">
-      <h2 id="profileDialogTitle">New profile</h2>
-      <label for="profileName">Profile name</label>
+      <h2 id="profileDialogTitle">新建配置</h2>
+      <label for="profileName">配置名称</label>
       <input id="profileName" name="profileName" type="text" maxlength="48" autocomplete="off" required>
       <div class="dialog-actions">
-        <button class="button button-quiet" value="cancel" type="button" data-close-dialog>Cancel</button>
-        <button id="confirmProfile" class="button button-primary" value="default" type="submit">Create</button>
+        <button class="button button-quiet" value="cancel" type="button" data-close-dialog>取消</button>
+        <button id="confirmProfile" class="button button-primary" value="default" type="submit">创建</button>
       </div>
     </form>
   </dialog>
 
   <dialog id="deleteDialog" aria-labelledby="deleteDialogTitle">
     <form method="dialog">
-      <h2 id="deleteDialogTitle">Delete profile?</h2>
-      <p id="deleteDialogCopy">This profile will be removed. Current video settings will stay unchanged.</p>
+      <h2 id="deleteDialogTitle">删除配置？</h2>
+      <p id="deleteDialogCopy">该配置将被移除。当前视频设置保持不变。</p>
       <div class="dialog-actions">
-        <button id="cancelDelete" class="button button-quiet" value="cancel" type="button" data-close-dialog>Cancel</button>
-        <button id="confirmDelete" class="button button-danger-solid" value="default" type="submit">Delete</button>
+        <button id="cancelDelete" class="button button-quiet" value="cancel" type="button" data-close-dialog>取消</button>
+        <button id="confirmDelete" class="button button-danger-solid" value="default" type="submit">删除</button>
       </div>
     </form>
   </dialog>

@@ -88,15 +88,15 @@ export function boot() {
   async function openAdvancedSettings() {
     // after the extension was updated or reloaded, the script already in a page has lost it: nothing it asks for can
     // be answered until the page is loaded again, so say that instead of doing nothing
-    if (!chrome.runtime?.id) { controls?.setAdvancedLabel('Reload the page: Framegen was updated'); return; }
+    if (!chrome.runtime?.id) { controls?.setAdvancedLabel('页面已过期：Framegen 已更新，请刷新页面'); return; }
     try {
       const response = await chrome.runtime.sendMessage({ type: 'fcOpenOptions' });
-      if (!response?.ok) throw new Error(response?.error || 'Could not open settings');
+      if (!response?.ok) throw new Error(response?.error || '无法打开设置');
     } catch (messageError) {
       try { await chrome.runtime.openOptionsPage(); }
       catch (directError) {
         log('open settings', directError || messageError);
-        controls?.setAdvancedLabel(chrome.runtime?.id ? 'Open settings from the toolbar icon' : 'Reload the page: Framegen was updated');
+        controls?.setAdvancedLabel(chrome.runtime?.id ? '请从工具栏图标打开设置' : '页面已过期：Framegen 已更新，请刷新页面');
       }
     }
   }
@@ -108,9 +108,9 @@ export function boot() {
     try {
       if (player.isRunning()) { player.stop(); return; }
       const video = biggestVideo();
-      if (!video) { notices.showCritical('Framegen: no video found'); return; }
+      if (!video) { notices.showCritical('Framegen：未找到视频'); return; }
       try { await player.start(video); }
-      catch (e) { player.preparing(false); notices.showCritical('Framegen error: ' + (e?.message || e)); if (!player.blocked) log(e); }
+      catch (e) { player.preparing(false); notices.showCritical('Framegen 错误：' + (e?.message || e)); if (!player.blocked) log(e); }
     } finally { toggling = false; }
   }
 

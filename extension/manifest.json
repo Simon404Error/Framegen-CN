@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Framegen - Frame Interpolation",
+  "name": "Framegen - 视频补帧",
   "version": "2.0.12",
   "version_name": "2.0.12",
   "content_security_policy": {
@@ -27,7 +27,7 @@
   "declarative_net_request": {
     "rule_resources": [{ "id": "cors_media", "enabled": true, "path": "rules.json" }]
   },
-  "description": "Real-time 2x+ frame interpolation with custom target FPS for any <video>. Runs locally on your GPU with WebGPU.",
+  "description": "为任意视频提供实时 2 倍以上补帧，可自定义目标帧率。基于 WebGPU 在本地 GPU 上运行。",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

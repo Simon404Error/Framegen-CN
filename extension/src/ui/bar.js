@@ -174,9 +174,9 @@ export class CompareSplit {
       <div style="position:absolute; left:50%; top:0; bottom:0; width:2px; margin-left:-1px;
         background:rgba(255,255,255,.85); box-shadow:0 0 10px rgba(0,0,0,.7)"></div>
       <div style="position:absolute; right:14px; bottom:10px; color:#fff; font:10px system-ui;
-        background:rgba(15,15,15,.6); border-radius:6px; padding:2px 6px; white-space:nowrap">orig.</div>
+        background:rgba(15,15,15,.6); border-radius:6px; padding:2px 6px; white-space:nowrap">原始</div>
       <div style="position:absolute; left:14px; bottom:10px; color:#fff; font:10px system-ui;
-        background:rgba(25,150,100,.65); border-radius:6px; padding:2px 6px">FG</div>`;
+        background:rgba(25,150,100,.65); border-radius:6px; padding:2px 6px">补帧</div>`;
     el.addEventListener('pointerdown', (e) => {
       el.setPointerCapture(e.pointerId);
       const move = (ev) => {

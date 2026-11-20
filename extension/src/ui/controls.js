@@ -7,7 +7,7 @@ import { svgIcon, GITHUB_PATH, FRAMEGEN_MARK } from './icons.js';
 const INLINE_SETTINGS_MIN_WIDTH = 300, INLINE_SETTINGS_MIN_HEIGHT = 180;
 const ISLAND_HALF = 57;
 const VIEW_HEIGHT = { settings: 626, picture: 436 };
-const SHARPNESS_LABELS = ['Off', 'Low', 'Medium', 'High'];
+const SHARPNESS_LABELS = ['关', '低', '中', '高'];
 const clampUnit = value => Math.min(1, Math.max(0, value));
 const ease = value => { const t = clampUnit(value); return t * t * (3 - 2 * t); };
 const mix = (from, to, progress) => from + (to - from) * progress;
@@ -259,14 +259,14 @@ export class Controls {
     btn.className = 'fc-side';
     btn.type = 'button';
     btn.dataset.active = 'false';
-    btn.setAttribute('aria-label', 'Toggle Framegen');
+    btn.setAttribute('aria-label', '切换 Framegen');
     btn.setAttribute('aria-pressed', 'false');
     btn.innerHTML = FRAMEGEN_MARK;
     const gear = document.createElement('button');
     gear.className = 'fc-side';
     gear.type = 'button';
     gear.dataset.open = 'false';
-    gear.setAttribute('aria-label', 'Open Framegen settings');
+    gear.setAttribute('aria-label', '打开 Framegen 设置');
     gear.setAttribute('aria-controls', 'fcSettingsPanel');
     gear.setAttribute('aria-expanded', 'false');
     gear.innerHTML = `<svg class="fc-settings-icon" viewBox="0 0 24 24" aria-hidden="true">${svgIcon('gear').replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
@@ -274,7 +274,7 @@ export class Controls {
     pic.className = 'fc-side';
     pic.type = 'button';
     pic.dataset.open = 'false';
-    pic.setAttribute('aria-label', 'Open picture settings');
+    pic.setAttribute('aria-label', '打开画面设置');
     pic.setAttribute('aria-controls', 'fcSettingsPanel');
     pic.setAttribute('aria-expanded', 'false');
     pic.innerHTML = `<svg class="fc-settings-icon" viewBox="0 0 24 24" aria-hidden="true">${svgIcon('picture').replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
@@ -429,8 +429,8 @@ export class Controls {
     this.panel.setAttribute('aria-hidden', String(!this.panelOpen));
     if (this.panelOpen) {
       this.panel.dataset.view = this.view;
-      this.panel.setAttribute('aria-label', this.view === 'picture' ? 'Framegen picture' : 'Framegen settings');
-      this.panel.querySelector('#fcPanelTitle').textContent = this.view === 'picture' ? 'Picture' : 'Framegen';
+      this.panel.setAttribute('aria-label', this.view === 'picture' ? 'Framegen 画面' : 'Framegen 设置');
+      this.panel.querySelector('#fcPanelTitle').textContent = this.view === 'picture' ? '画面' : 'Framegen';
       this.panel.scrollTop = 0;
       this.applySurfaceProgress(this.surfaceProgress);
     }
@@ -525,7 +525,7 @@ export class Controls {
     const panel = document.createElement('section');
     panel.className = 'fc-panel';
     panel.id = 'fcSettingsPanel';
-    panel.setAttribute('aria-label', 'Framegen settings');
+    panel.setAttribute('aria-label', 'Framegen 设置');
     panel.setAttribute('aria-hidden', 'true');
     // focusable by a press, so the focus stays inside the controls when the panel's own surface is clicked
     panel.tabIndex = -1;
@@ -549,67 +549,67 @@ export class Controls {
           style="filter:${PICTURE_SWATCH_FILTERS[key]}"></span><span class="fc-look-name">${mode.label}</span></button>`).join('')}
       </div>
       <div class="fc-divider"></div>
-      <div class="fc-row"><span>Sharpness</span>
-        <div class="fc-seg" id="fcSharpness" role="radiogroup" aria-label="Sharpness">
+      <div class="fc-row"><span>锐化</span>
+        <div class="fc-seg" id="fcSharpness" role="radiogroup" aria-label="锐化">
           ${SHARPNESS_LABELS.map((label, value) => `<button type="button" role="radio" aria-checked="false"
             data-value="${value}">${label}</button>`).join('')}
         </div></div>
-      <label class="fc-row"><span>Upscale<small>2× neural resolution boost</small></span>
+      <label class="fc-row"><span>超分辨率<small>2 倍神经分辨率增强</small></span>
         <input class="fc-sw" type="checkbox" id="fcSR"></label>
-      <label class="fc-row"><span>HDR<small>Brighter highlights on HDR displays</small></span>
+      <label class="fc-row"><span>HDR<small>在 HDR 显示器上呈现更亮的高光</small></span>
         <input class="fc-sw" type="checkbox" id="fcHDR"></label>
       </div>
       <div class="fc-view" data-view="settings">
-      <div class="fc-row fc-profile-row"><span>Profile<small>Apply a saved setup</small></span>
+      <div class="fc-row fc-profile-row"><span>配置<small>应用已保存的设置组合</small></span>
         <select class="fc-sel fc-profile" id="fcProfile" disabled>
-          <option>Loading profiles…</option>
+          <option>正在加载配置…</option>
         </select></div>
       <div class="fc-divider"></div>
-      <label class="fc-row"><span>Frame generation<small>Create smoother motion</small></span>
+      <label class="fc-row"><span>补帧生成<small>生成更流畅的运动</small></span>
         <input class="fc-sw" type="checkbox" id="fcFG"></label>
-      <div class="fc-row"><span>Output rate<small>How playback is paced</small></span>
+      <div class="fc-row"><span>输出帧率<small>控制播放节奏</small></span>
         <select class="fc-sel" id="fcFactor">
-          <option value="auto">Auto · recommended</option>
-          <option value="hz">Match display</option>
-          <option value="target">Custom FPS</option>
+          <option value="auto">自动 · 推荐</option>
+          <option value="hz">匹配显示器</option>
+          <option value="target">自定义 FPS</option>
           <option value="2">2× source</option><option value="3">3× source</option>
           <option value="4">4× source</option><option value="5">5× source</option>
           <option value="6">6× source</option>
         </select></div>
       <label class="fc-target-control">
-        <span class="fc-target-head"><span><span id="fcRateSliderTitle">FPS limit</span>
-          <small id="fcRateSliderHint">Common rates · Auto may run lower</small></span>
-          <output id="fcTargetFpsValue" for="fcTargetFps">Unlimited</output></span>
+        <span class="fc-target-head"><span><span id="fcRateSliderTitle">FPS 上限</span>
+          <small id="fcRateSliderHint">常用帧率 · 自动模式可能更低</small></span>
+          <output id="fcTargetFpsValue" for="fcTargetFps">无限制</output></span>
         <input class="fc-target-slider" id="fcTargetFps" type="range" min="0" max="17"
-          step="1" value="17" aria-label="FPS limit">
+          step="1" value="17" aria-label="FPS 上限">
         <span class="fc-target-scale" id="fcRateSliderScale" aria-hidden="true">
           <span>15</span><span>60</span><span>120</span><span>240</span><span>∞</span>
         </span>
       </label>
-      <div class="fc-row"><span>Quality<small>Detail against GPU load</small></span>
+      <div class="fc-row"><span>画质<small>细节与 GPU 负载的权衡</small></span>
         <select class="fc-sel" id="fcRes">
-          <option value="288">Low power</option><option value="360">Efficient</option>
-          <option value="480">Balanced</option>
-          <option value="720">High</option>
-          <option value="1080">Ultra</option>
+          <option value="288">低功耗</option><option value="360">高效</option>
+          <option value="480">均衡</option>
+          <option value="720">高</option>
+          <option value="1080">极致</option>
         </select></div>
       <div class="fc-divider"></div>
-      <label class="fc-row"><span>FPS counter<small>Show frame rate and render time</small></span>
+      <label class="fc-row"><span>FPS 计数器<small>显示帧率和渲染耗时</small></span>
         <input class="fc-sw" type="checkbox" id="fcShowFps"></label>
-      <label class="fc-row"><span>Watermark<small>Show the Framegen label on video</small></span>
+      <label class="fc-row"><span>水印<small>在视频上显示 Framegen 标签</small></span>
         <input class="fc-sw" type="checkbox" id="fcWatermark"></label>
-      <label class="fc-row"><span>Warnings<small>Show non-critical notices over video</small></span>
+      <label class="fc-row"><span>警告<small>在视频上显示非关键提示</small></span>
         <input class="fc-sw" type="checkbox" id="fcWarnings"></label>
       <pre class="fc-status" id="fcStatus"></pre>
       <button class="fc-open-settings" id="fcOpenSettings" type="button">
-        <span>Advanced settings</span>
+        <span>高级设置</span>
         <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
           <path fill="currentColor" d="m6 3 5 5-5 5-1.2-1.2L8.6 8 4.8 4.2 6 3Z"/>
         </svg>
       </button>
       </div>
-      <a class="fc-engine-link" href="https://github.com/getflyhigh/flyhigh-engine" target="_blank" rel="noopener noreferrer">Powered by
-        <b>FlyHigh engine</b></a>`;
+      <a class="fc-engine-link" href="https://github.com/getflyhigh/flyhigh-engine" target="_blank" rel="noopener noreferrer">由
+        <b>FlyHigh 引擎</b>驱动</a>`;
     this.clip.appendChild(panel);
     this.panel = panel;
     this.enhanceCustomSelects(panel);
@@ -701,7 +701,7 @@ export class Controls {
       ? this.fpsLimitFromSlider(input)
       : Profiles.sanitizeTargetFps(input.value, cfg.targetFps);
     const output = this.panel.querySelector('#fcTargetFpsValue');
-    const label = value === null ? 'Unlimited' : `${Number(value.toFixed(2))} FPS`;
+    const label = value === null ? '无限制' : `${Number(value.toFixed(2))} FPS`;
     if (output) output.value = label;
     input.setAttribute('aria-valuetext', label);
     const min = Number.isFinite(Number(input.min)) ? Number(input.min) : 2;
@@ -734,25 +734,25 @@ export class Controls {
     const scale = this.panel.querySelector('#fcRateSliderScale');
     const presets = Profiles.FPS_LIMIT_PRESETS;
     if (cfg.factor === 'auto') {
-      title.textContent = 'FPS limit';
-      hint.textContent = 'Common rates · Auto may run lower';
+      title.textContent = 'FPS 上限';
+      hint.textContent = '常用帧率 · 自动模式可能更低';
       input.min = '0';
       input.max = String(presets.length - 1);
       input.step = '1';
       input.value = String(Profiles.fpsLimitPresetIndex(cfg.fpsLimit));
-      input.setAttribute('aria-label', 'FPS limit');
+      input.setAttribute('aria-label', 'FPS 上限');
       this.renderRateScale(scale, [15, 60, 120, 240, null].map(value => ({
         label: value === null ? '∞' : String(value),
         position: Profiles.fpsLimitPresetIndex(value) / (presets.length - 1) * 100,
       })));
     } else {
-      title.textContent = 'Custom FPS';
-      hint.textContent = 'Exact target · minimum 2× source';
+      title.textContent = '自定义 FPS';
+      hint.textContent = '精确目标 · 最低为源的 2 倍';
       input.min = '2';
       input.max = '1000';
       input.step = '0.01';
       input.value = String(cfg.targetFps);
-      input.setAttribute('aria-label', 'Custom FPS');
+      input.setAttribute('aria-label', '自定义 FPS');
       this.renderRateScale(scale, [
         { label: '2', position: 0 },
         { label: '500', position: 49.9 },
@@ -776,12 +776,12 @@ export class Controls {
     if (!select || !this.profileStore) return;
     const current = document.createElement('option');
     current.value = '';
-    current.textContent = 'Current settings';
+    current.textContent = '当前设置';
     const children = [current];
     const profiles = Profiles.profileList(this.profileStore);
     if (profiles.length) {
       const group = document.createElement('optgroup');
-      group.label = 'My profiles';
+      group.label = '我的配置';
       for (const profile of profiles) {
         const option = document.createElement('option');
         option.value = profile.id;
@@ -813,7 +813,7 @@ export class Controls {
       this.profileStore = null;
       if (select) {
         const unavailable = document.createElement('option');
-        unavailable.textContent = 'Profiles unavailable';
+        unavailable.textContent = '配置不可用';
         select.replaceChildren(unavailable);
         select.disabled = true;
         this.rebuildCustomSelect(select);
@@ -935,7 +935,7 @@ export class Controls {
 
   enhanceCustomSelect(select, index) {
     if (this.customSelects.has(select)) return;
-    const label = select.closest('.fc-row')?.querySelector(':scope > span')?.childNodes[0]?.textContent?.trim() || 'Choose an option';
+    const label = select.closest('.fc-row')?.querySelector(':scope > span')?.childNodes[0]?.textContent?.trim() || '选择一个选项';
     const root = document.createElement('div');
     const trigger = document.createElement('button');
     const value = document.createElement('span');

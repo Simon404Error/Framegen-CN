@@ -49,50 +49,47 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="title"><span class="dot" id="dot"></span>Framegen <span class="ver" id="ver"></span><span id="state">Off</span></div>
+  <div class="title"><span class="dot" id="dot"></span>Framegen <span class="ver" id="ver"></span><span id="state">关闭</span></div>
   <div class="tabs">
-    <button id="tabStatus" class="act">Status</button>
-    <button id="tabHelp">Help</button>
+    <button id="tabStatus" class="act">状态</button>
+    <button id="tabHelp">帮助</button>
   </div>
 
   <div id="status">
     <div id="stat" class="card"></div>
     <div id="sys" class="card"></div>
-    <div class="hint">Hover a video: the Framegen buttons appear on its left edge.</div>
+    <div class="hint">将鼠标悬停在视频上，Framegen 按钮会出现在视频左缘。</div>
   </div>
 
   <div id="help" style="display:none">
-    <h4>"No GPU adapter" / does not start</h4>
-    <p>WebGPU is switched off in the browser. In Chrome:</p>
+    <h4>提示"No GPU adapter" / 无法启动</h4>
+    <p>浏览器的 WebGPU 未开启。在 Chrome 中：</p>
     <ol>
-      <li>Open <b>chrome://settings/system</b></li>
-      <li>Enable "Use graphics acceleration when available"</li>
-      <li>Fully restart the browser</li>
+      <li>打开 <b>chrome://settings/system</b></li>
+      <li>开启"使用图形加速（如可用）"</li>
+      <li>完全重启浏览器</li>
     </ol>
-    <p>Still nothing? Update the GPU driver from NVIDIA/AMD/Intel - old drivers
-       get blocklisted.</p>
-    <h4>Two GPUs (laptop)</h4>
-    <p>Browsers on Windows often land on the integrated GPU - fps barely improves.</p>
+    <p>仍然不行？请到 NVIDIA/AMD/Intel 官网更新显卡驱动——旧驱动会被浏览器列入黑名单。</p>
+    <h4>双显卡（笔记本）</h4>
+    <p>Windows 上浏览器常常跑在核显上——帧率几乎不会提升。</p>
     <ol>
-      <li>Windows Settings → System → Display → Graphics</li>
-      <li>Add the browser → High performance</li>
-      <li>Fully restart it</li>
+      <li>Windows 设置 → 系统 → 屏幕 → 显示卡</li>
+      <li>添加浏览器 → 选择"高性能"</li>
+      <li>完全重启浏览器</li>
     </ol>
-    <p>Check: the GPU line on the Status tab should show the discrete card.</p>
-    <h4>Requirements</h4>
-    <p>Desktop Chrome or Edge 121+, or Firefox 141+ on Windows, and a GPU from
-       roughly 2016 or newer. Safari and phones - no.</p>
-    <h4>How to use</h4>
-    <p>Hover any video: the FG (on/off), picture and settings buttons appear on its left edge.
-       Compare, an original/processed split view, is in the full settings.</p>
-    <h4>What does not work</h4>
-    <p>Netflix, Crunchyroll and other DRM sites - the browser never hands us their
-       pixels, a platform limitation. On some sites the video may reload for a couple
-       of seconds the first time you enable FG (CORS) - that is normal.</p>
+    <p>检查方法：在"状态"标签中 GPU 一行应显示独立显卡。</p>
+    <h4>系统要求</h4>
+    <p>Windows 上的桌面版 Chrome 或 Edge 121+，或 Firefox 141+，以及大约 2016 年及以后的显卡。Safari 和手机不支持。</p>
+    <h4>使用方法</h4>
+    <p>悬停任意视频：补帧开关（FG）、画面和设置按钮会出现在视频左缘。
+       对比功能（原始/处理后的分屏视图）在完整设置页中。</p>
+    <h4>不支持的情况</h4>
+    <p>Netflix、Crunchyroll 等 DRM 站点——浏览器不会把它们的像素交给我们，这是平台限制。
+       在部分站点上，首次开启补帧时视频可能会重新加载几秒（CORS），这是正常现象。</p>
   </div>
 
   <button id="fullSettings" class="full-settings" type="button">
-    <span>Open settings</span>
+    <span>打开设置</span>
     <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
       <path fill="currentColor" d="M3 2h4v2H4v8h8V9h2v4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm6 0h5v5h-2V5.4L7.7 9.7 6.3 8.3 10.6 4H9V2Z"/>
     </svg>
@@ -103,7 +100,7 @@
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub</a>
     <a href="https://github.com/getflyhigh/flyhigh-engine" target="_blank" rel="noopener noreferrer">FlyHigh engine</a>
-    <span class="v">Open source · MIT</span>
+    <span class="v">开源 · MIT</span>
   </div>
 </div>
 <script src="popup.js"></script>
