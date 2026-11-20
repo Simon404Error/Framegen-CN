@@ -1,6 +1,9 @@
 import { Profiles } from './src/profiles.js';
 import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
 
+// The hostnames the viewer opted into from the player rail (chrome.storage.local, shared with the content script).
+const AUTO_HOSTS_KEY = 'fcAutoHosts';
+
 (function framegenOptions() {
   'use strict';
 
@@ -534,6 +537,71 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
     renderAll({ write: writeFormAfterChange });
   }
 
+  // ---------- auto-start sites ----------
+  // A separate store from the settings profiles: it belongs to the site, not to a settings set, and the content
+  // script reads it on every page load. Edits here are immediate (no Apply), which is what a delete button implies.
+  let autoHosts = [];
+
+  function writeAutoHosts(list) {
+    autoHosts = list;
+    renderAutoHosts();
+    try { chrome.storage.local.set({ [AUTO_HOSTS_KEY]: autoHosts }); } catch { /* storage unavailable */ }
+  }
+
+  function renderAutoHosts() {
+    const list = $('autoHostsList');
+    list.replaceChildren(...autoHosts.map(host => {
+      const chip = document.createElement('span');
+      chip.className = 'site-chip';
+      const label = document.createElement('span');
+      label.textContent = host;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.setAttribute('aria-label', `移除 ${host}`);
+      remove.addEventListener('click', () => writeAutoHosts(autoHosts.filter(item => item !== host)));
+      chip.append(label, remove);
+      return chip;
+    }));
+  }
+
+  function normalizeHost(value) {
+    let host = String(value || '').trim().toLowerCase();
+    if (!host) return null;
+    host = host.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '');
+    return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(host) ? host : null;
+  }
+
+  function addAutoHost() {
+    const input = $('autoHostInput');
+    const host = normalizeHost(input.value);
+    if (!host) { input.setCustomValidity('请输入有效域名，例如 bilibili.com'); input.reportValidity(); return; }
+    input.setCustomValidity('');
+    input.value = '';
+    if (autoHosts.includes(host)) return;
+    writeAutoHosts([...autoHosts, host].slice(-200));
+  }
+
+  function bindAutoHosts() {
+    $('addAutoHost').addEventListener('click', addAutoHost);
+    $('autoHostInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); addAutoHost(); }
+    });
+    $('autoHostInput').addEventListener('input', () => $('autoHostInput').setCustomValidity(''));
+    $('clearAutoHosts').addEventListener('click', () => writeAutoHosts([]));
+    try {
+      chrome.storage.local.get(AUTO_HOSTS_KEY, snapshot => {
+        autoHosts = Array.isArray(snapshot?.[AUTO_HOSTS_KEY]) ? snapshot[AUTO_HOSTS_KEY] : [];
+        renderAutoHosts();
+      });
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local' || !Object.hasOwn(changes, AUTO_HOSTS_KEY)) return;
+        autoHosts = Array.isArray(changes[AUTO_HOSTS_KEY].newValue) ? changes[AUTO_HOSTS_KEY].newValue : [];
+        renderAutoHosts();
+      });
+    } catch { /* storage unavailable */ }
+  }
+
   function bindEvents() {
     $('fpsLimit').addEventListener('input', updateFpsLimitPresentation);
     $('settingsForm').addEventListener('input', () => {
@@ -556,6 +624,7 @@ import { PICTURE_SWATCH_FILTERS } from './src/picture-modes.js';
       closeButton.addEventListener('click', () => closeButton.closest('dialog').close());
     }
     chrome.storage.onChanged.addListener(storageChanged);
+    bindAutoHosts();
   }
 
   async function initialize() {

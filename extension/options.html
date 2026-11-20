@@ -298,6 +298,19 @@
             </div>
             <input id="subtitleOverlay" name="subtitleOverlay" class="switch" type="checkbox" aria-describedby="subtitleOverlayHint">
           </div>
+
+          <div class="setting-row setting-row-stack">
+            <div class="setting-copy">
+              <label>自动补帧的网站</label>
+              <p id="autoHostsHint">在这些网站打开视频时自动开启补帧（默认关闭）。在播放器中打开或关闭补帧即可添加或移除。</p>
+            </div>
+            <div class="site-list" id="autoHostsList"></div>
+            <div class="site-add">
+              <input id="autoHostInput" type="text" placeholder="例：bilibili.com" autocomplete="off">
+              <button id="addAutoHost" class="button button-quiet" type="button">添加</button>
+              <button id="clearAutoHosts" class="button button-danger" type="button">全部清除</button>
+            </div>
+          </div>
         </section>
 
         <section id="diagnostics" class="settings-section" aria-labelledby="diagnosticsHeading">

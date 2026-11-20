@@ -278,3 +278,16 @@ dialog input[type="text"] { width: 100%; background: var(--surface); }
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+/* auto-start site list */
+.site-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.site-list:empty { display: none; }
+.site-list:empty::after { content: '暂无，在播放器中开启补帧即可添加'; color: #70767e; font-size: 12px; }
+.site-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px;
+  border: 1px solid #34383d; border-radius: 14px; background: #212428; color: #eceeef; font-size: 12px; }
+.site-chip button { width: 16px; height: 16px; display: grid; place-items: center; padding: 0; border: 0;
+  border-radius: 50%; background: #34383d; color: #a3a8af; font: 600 11px/1 system-ui; cursor: pointer; }
+.site-chip button:hover { background: #5a4a4a; color: #ffb4a8; }
+.site-add { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.site-add input { flex: 0 1 260px; padding: 6px 10px; border: 1px solid #34383d; border-radius: 7px;
+  background: #141618; color: #eceeef; font: 12.5px system-ui; }
+.site-add input::placeholder { color: #70767e; }
