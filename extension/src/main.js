@@ -109,8 +109,14 @@ export function boot() {
     if (!controls) injectUI();
     toggling = true;
     try {
-      if (player.isRunning()) { player.stop(); if (inFeed()) feedStoppedByUser = true; return; }
-      feedStoppedByUser = false;
+      if (player.isRunning()) {
+        player.stop();
+        // The viewer turned it off: that intent carries to the next clips of this page.
+        if (inFeed()) feedWanted = false;
+        return;
+      }
+      // Turning it on by hand is the intent that makes the following clips start on their own.
+      if (inFeed()) feedWanted = true;
       const video = biggestVideo();
       if (!video) { notices.showCritical('Framegen：未找到视频'); return; }
       try { await player.start(video); }
@@ -169,9 +175,12 @@ export function boot() {
   // ---------- navigation ----------
   let reattachSeq = 0;
   function reattach() {
+    // Carrying the enable over to the next clip is only a continuation of what the viewer asked for; with the intent
+    // off (a fresh page, or the rail turned off by hand) nothing re-arms on its own.
+    if (!feedWanted) return;
     const seq = ++reattachSeq, t0 = performance.now();
     const tick = async () => {
-      if (seq !== reattachSeq || player.isRunning() || !inFeed()) return;
+      if (seq !== reattachSeq || player.isRunning() || !inFeed() || !feedWanted) return;
       if (performance.now() - t0 > 12000) return;
       const v = biggestVideo();
       if (!v || !v.videoWidth || toggling) { setTimeout(tick, 150); return; }
@@ -184,15 +193,16 @@ export function boot() {
   }
 
   let pageHref = location.href;
-  // The recommend feed of douyin.com swaps its video element and resets the player on paths where neither the URL
-  // changes nor a teardown event reaches us, so the enable silently dies. The watchdog re-arms it; a manual stop on
-  // the current clip is respected until the clip changes (URL change or video swap).
+  // feedWanted is the viewer's intent for this page: false on a fresh load (nothing turns itself on), set by the
+  // rail button, and kept across the clips of a vertical feed — so following clips inherit it, the same way the
+  // enable already carried over. Nothing here starts generation without it.
+  let feedWanted = false;
   let feedWatchdogVideo = null;
-  let feedStoppedByUser = false;
   setInterval(() => {
     if (location.href !== pageHref) {
+      // SPA navigation to another page: the old stream is dead. The intent survives it (it is per site visit, not
+      // per clip), but the stream does not.
       pageHref = location.href;
-      feedStoppedByUser = false;
       if (player.isRunning()) {
         player.stop();
         if (inFeed()) reattach();
@@ -200,8 +210,7 @@ export function boot() {
     }
     if (inFeed()) {
       const v = biggestVideo();
-      // A video element that left the DOM (or the stream the canvas rides on) means the clip changed: re-arm.
-      if (feedWatchdogVideo !== v) { feedWatchdogVideo = v; feedStoppedByUser = false; }
+      if (feedWatchdogVideo !== v) feedWatchdogVideo = v;
       // A vertical feed keeps the old clip's <video> in the DOM when the next one is scrolled in, so the player stays
       // "running" on a video that is now off-screen: no teardown, no isRunning() flip, and the rail trails the old
       // element upward. The clip changed whenever the element on screen is not the one being generated.
@@ -209,7 +218,7 @@ export function boot() {
       // While the next clip's decoder has produced nothing yet, biggestVideo() is null: drop the off-screen stream so
       // the rail and the canvas stop following the clip above (the branch below re-arms once a video is ready).
       if (!stale && player.isRunning() && player.video && !onScreen(player.video)) player.stop();
-      if ((!player.isRunning() || stale) && !toggling && !feedStoppedByUser && v?.videoWidth) {
+      if (feedWanted && (!player.isRunning() || stale) && !toggling && v?.videoWidth) {
         // show the rail right away: schedulePlacement() refuses to run while hidden, so the only way back from
         // setVisible(false) is a direct place() — which ends in setVisible(true)
         controls?.revealFor(2500);
