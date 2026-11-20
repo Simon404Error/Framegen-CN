@@ -9,7 +9,7 @@ import { Subtitles } from './ui/subtitles.js';
 import { ControlBar, CompareSplit } from './ui/bar.js';
 import { Controls, pointInsideRect } from './ui/controls.js';
 import { svgIcon } from './ui/icons.js';
-import { SITE_CONTROLS_OK, inFeed, keepTwitchControlsAboveOverlay, biggestVideo } from './sites.js';
+import { SITE_CONTROLS_OK, inFeed, keepTwitchControlsAboveOverlay, biggestVideo, onScreen } from './sites.js';
 import { installBenchBridge, benchToken } from './bench.js';
 
 export const VERSION = chrome.runtime.getManifest().version;
@@ -202,11 +202,19 @@ export function boot() {
       const v = biggestVideo();
       // A video element that left the DOM (or the stream the canvas rides on) means the clip changed: re-arm.
       if (feedWatchdogVideo !== v) { feedWatchdogVideo = v; feedStoppedByUser = false; }
-      if (!player.isRunning() && !toggling && !feedStoppedByUser && v?.videoWidth) {
+      // A vertical feed keeps the old clip's <video> in the DOM when the next one is scrolled in, so the player stays
+      // "running" on a video that is now off-screen: no teardown, no isRunning() flip, and the rail trails the old
+      // element upward. The clip changed whenever the element on screen is not the one being generated.
+      const stale = player.isRunning() && v && player.video !== v;
+      // While the next clip's decoder has produced nothing yet, biggestVideo() is null: drop the off-screen stream so
+      // the rail and the canvas stop following the clip above (the branch below re-arms once a video is ready).
+      if (!stale && player.isRunning() && player.video && !onScreen(player.video)) player.stop();
+      if ((!player.isRunning() || stale) && !toggling && !feedStoppedByUser && v?.videoWidth) {
         // show the rail right away: schedulePlacement() refuses to run while hidden, so the only way back from
         // setVisible(false) is a direct place() — which ends in setVisible(true)
         controls?.revealFor(2500);
         controls?.place(v.getBoundingClientRect(), v);
+        if (stale) player.stop();
         toggling = true;
         player.start(v)
           .then(() => { if (player.isRunning()) controls?.place(v.getBoundingClientRect(), v); })

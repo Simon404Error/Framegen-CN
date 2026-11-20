@@ -25,14 +25,27 @@ export function keepTwitchControlsAboveOverlay() {
 
 // Ranked by visible area in the viewport, not raw size: virtualized feeds (TikTok) keep several same-sized players
 // mounted and rotate them through the viewport, and an off-screen one must never win. Playing beats paused.
+export function visibleArea(v) {
+  const r = v.getBoundingClientRect();
+  return Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0))
+    * Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
+}
+
+// Whether that player still owns a meaningful part of the viewport. A vertical feed leaves the previous clip mounted
+// just above (or below) the visible one; generating for it means the canvas and the in-player rail follow it out.
+export function onScreen(video, minFraction = 0.25) {
+  if (!video?.isConnected) return false;
+  const r = video.getBoundingClientRect();
+  const box = r.width * r.height;
+  if (box <= 0) return false;
+  return visibleArea(video) / box >= minFraction;
+}
+
 export function biggestVideo() {
   let best = null, score = 0;
   for (const v of document.querySelectorAll('video')) {
     if (v.readyState < 2) continue;
-    const r = v.getBoundingClientRect();
-    const visible = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0))
-      * Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
-    const s = visible * (v.paused ? 0.5 : 1);
+    const s = visibleArea(v) * (v.paused ? 0.5 : 1);
     if (s > score) { score = s; best = v; }
   }
   return best;
