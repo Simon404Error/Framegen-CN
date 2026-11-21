@@ -197,7 +197,15 @@ const CSS = `
     text-decoration:none;border-radius:4px;transition:color .12s}
   .fc-engine-link b{color:#a3a8af;font-weight:600;transition:color .12s}
   .fc-engine-link:hover,.fc-engine-link:hover b{color:#f2f3f3}
-  .fc-engine-link:focus-visible{outline:2px solid #19c37d;outline-offset:2px}`;
+  .fc-engine-link:focus-visible{outline:2px solid #19c37d;outline-offset:2px}
+  /* hover tip for a rail button: a tooltip beside the rail, above the stage but inside the fixed root */
+  .fc-tip{position:absolute!important;z-index:5!important;left:44px!important;max-width:calc(100% - 56px)!important;
+    box-sizing:border-box;padding:6px 9px;
+    border-radius:6px;background:rgba(20,22,25,.97);border:1px solid #3a3e44;color:#e6e8ea;
+    font:11.5px/1.45 system-ui,sans-serif;white-space:normal;pointer-events:none;
+    box-shadow:0 3px 10px rgba(0,0,0,.45);opacity:0;visibility:hidden;
+    transition:opacity .12s ease,visibility 0s linear .12s}
+  .fc-tip[data-show="true"]{opacity:1;visibility:visible;transition:opacity .12s ease,visibility 0s linear}`;
 
 export class Controls {
   constructor({ version, settings, host, log }) {
@@ -282,6 +290,30 @@ export class Controls {
     this.btn = btn;
     this.gear = gear;
     this.pic = pic;
+
+    // The rail's toggle has a hover tip: turning generation on is what makes the browser stop handing the video to
+    // RTX VSR (the canvas covers it), so say that where the button is rather than in a settings page nobody reads.
+    const tip = document.createElement('div');
+    tip.className = 'fc-tip';
+    tip.textContent = '开启后，自动禁用RTX VSR，关闭后恢复';
+    tip.setAttribute('role', 'tooltip');
+    this.tip = tip;
+    // Outside the stage: the stage is clipped to the surface path and takes no pointer events, and the tip has to be
+    // readable even while the stage is sliding. The root is the fixed-position box the rail already lives in.
+    root.appendChild(tip);
+    const showTip = () => {
+      // level with the toggle itself: the rail is centred on the island, the toggle is its first row
+      const buttonRect = btn.getBoundingClientRect();
+      const rootRect = this.root.getBoundingClientRect();
+      const top = Math.max(0, Math.min(this.height - 32, Math.round(buttonRect.top - rootRect.top)));
+      tip.style.top = top + 'px';
+      tip.dataset.show = 'true';
+    };
+    const hideTip = () => { tip.dataset.show = 'false'; };
+    btn.addEventListener('pointerenter', showTip);
+    btn.addEventListener('pointerleave', hideTip);
+    btn.addEventListener('focus', showTip);
+    btn.addEventListener('blur', hideTip);
 
     this.buildPanel();
     this.applySurfaceProgress(0);
