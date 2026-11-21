@@ -486,8 +486,13 @@ export class Controls {
   }
 
   pointInsideControls(x, y, videoRect) {
-    if (!this.root) return false;
-    return pointInsideRect(x, y, this.root.getBoundingClientRect()) && pointInsideRect(x, y, videoRect);
+    return this.isVisible() && pointInsideRect(x, y, videoRect) &&
+      this.root.contains(document.elementFromPoint(x, y));
+  }
+
+  hasKeyboardFocus() {
+    const focused = document.activeElement;
+    return this.root?.contains(focused) && focused.matches(':focus-visible');
   }
 
   // ---------- placement ----------
@@ -1071,4 +1076,10 @@ export class Controls {
 
 export function pointInsideRect(x, y, rect) {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+export function pointInsideLeftEdge(x, y, rect) {
+  // Start at the visible edge, where the control rail is placed even if the video is partly offscreen.
+  const left = Math.max(0, rect.left);
+  return x >= left && x < left + 80 && pointInsideRect(x, y, rect);
 }

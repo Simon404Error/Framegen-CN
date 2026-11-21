@@ -7,7 +7,7 @@ import { Overlay } from './overlay.js';
 import { Notices } from './ui/notices.js';
 import { Subtitles } from './ui/subtitles.js';
 import { ControlBar, CompareSplit } from './ui/bar.js';
-import { Controls, pointInsideRect } from './ui/controls.js';
+import { Controls, pointInsideRect, pointInsideLeftEdge } from './ui/controls.js';
 import { svgIcon } from './ui/icons.js';
 import { SITE_CONTROLS_OK, inFeed, keepTwitchControlsAboveOverlay, biggestVideo, onScreen } from './sites.js';
 import { installBenchBridge, benchToken } from './bench.js';
@@ -30,7 +30,8 @@ export function boot() {
   let bar = null;
   let split = null;
   let toggling = false;
-  let hoverVideo = null, hoverScanAt = -1e9, mouseMoveAt = -1e9, preloadFailedAt = -1e9;
+  let hoverVideo = null, hoverScanAt = -1e9, preloadFailedAt = -1e9;
+  let pointer = null, hoverFrame = 0;
 
   // ---------- per-site auto-start ----------
   const siteHost = () => (location.hostname || '').toLowerCase().replace(/^www\./, '');
@@ -101,10 +102,7 @@ export function boot() {
     bar.update();
     notices.layout(rect, { hud: cfg.debug || cfg.showFps, watermark: cfg.showWatermark });
     notices.warn(player.warningText(player.report()), now, rect, cfg.showWarnings);
-    // place() is the one call that both positions and re-reveals the rail, so it must not be gated on isVisible():
-    // a feed that briefly shrinks the video rect hides the rail, and a gated call could then never bring it back
-    // (a vertical feed scrolls with the mouse still, so no mousemove follows to do it either).
-    controls.place(rect, video);
+    if (controls.isVisible()) updateRail(video, rect);
     split.layout(rect, cfg.compare);
   }
 
@@ -188,38 +186,97 @@ export function boot() {
   document.addEventListener('fullscreenchange', () => {
     reparentUI();
     controls?.resetGeometry();
+    controls?.blurFocus();
     controls?.setPanelOpen(false);
     controls?.setVisible(false);
     hoverScanAt = 0;
+    pointer = null;
+    railAutoUntil = 0;
     player.onFullscreenChange();
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const v = activeVideo();
-      if (v && controls && performance.now() < controls.revealUntil) controls.place(v.getBoundingClientRect(), v);
-    }));
   });
 
-  // ---------- hover: the controls appear, the backend preloads ----------
-  document.addEventListener('mousemove', (e) => {
+  const RAIL_IDLE_MS = 3000;
+  let railActivityAt = -Infinity, railAutoUntil = 0, railIdleTimer = 0;
+  let railHovering = false, railLeaveUntil = 0;
+  let seenVideo = null, seenSource = '', videoPageHref = location.href;
+
+  function armRailIdle() {
+    clearTimeout(railIdleTimer);
+    railIdleTimer = setTimeout(() => {
+      const v = activeVideo();
+      updateRail(v, v?.isConnected ? v.getBoundingClientRect() : null);
+    }, RAIL_IDLE_MS);
+  }
+
+  function updateRail(video, rect, fromMouse = false) {
+    if (!controls || (!fromMouse && !controls.isVisible())) return;
     const now = performance.now();
-    // gaming mice fire at up to 1000 Hz and the rect read below forces layout
-    if (now - mouseMoveAt < 33) return;
-    mouseMoveAt = now;
-    if (!player.isRunning() && now - hoverScanAt > 300) { hoverScanAt = now; hoverVideo = biggestVideo(); }
-    const v = activeVideo();
-    if (!v || !controls) return;
-    const r = (player.isRunning() && player.lastRect && now - player.nextUiAt < 250) ? player.lastRect : v.getBoundingClientRect();
-    const insideVideo = pointInsideRect(e.clientX, e.clientY, r);
-    const insideControls = controls.pointInsideControls(e.clientX, e.clientY, r);
-    if (insideVideo || insideControls) {
-      controls.revealFor(2000);
-      controls.place(r, v);
-      // hovering a video signals intent: the weights and the kernels load now, so the click lands instantly
-      if (insideVideo && !player.backend && !player.backendLoading && !player.blocked && now - preloadFailedAt > 5000) {
-        player.preload().catch(err => { preloadFailedAt = performance.now(); if (!player.blocked) log('preload', err); });
-      }
-    } else {
-      controls.limitReveal(250);
+    const overUI = rect && pointer && controls.pointInsideControls(pointer.x, pointer.y, rect);
+    const overEdge = rect && pointer && pointInsideLeftEdge(pointer.x, pointer.y, rect);
+    const hovering = Boolean(overUI || overEdge);
+    if (controls.isVisible() && railHovering && !hovering) {
+      railLeaveUntil = now + RAIL_IDLE_MS;
+      armRailIdle();
     }
+    railHovering = hovering;
+    if (hovering) railLeaveUntil = 0;
+    if (rect && (overUI || (overEdge && now - railActivityAt < RAIL_IDLE_MS) ||
+        now < railAutoUntil || (controls.isVisible() && now < railLeaveUntil))) {
+      controls.place(rect, video);
+    } else if (controls.isVisible()) {
+      controls.blurFocus();
+      controls.setPanelOpen(false);
+      controls.setVisible(false);
+    }
+  }
+
+  function railActivity() {
+    railActivityAt = performance.now();
+    railAutoUntil = 0;
+    armRailIdle();
+  }
+
+  // The rail opens from the left edge. The playback bar still responds to the entire video.
+  document.addEventListener('mousemove', (e) => {
+    if (!pointer || pointer.x !== e.clientX || pointer.y !== e.clientY) railActivity();
+    pointer = { x: e.clientX, y: e.clientY };
+    if (hoverFrame) return;
+    hoverFrame = requestAnimationFrame(() => {
+      hoverFrame = 0;
+      if (!pointer || !controls) return;
+      const now = performance.now();
+      if (!player.isRunning() && (now - hoverScanAt > 300 || !hoverVideo?.isConnected)) {
+        hoverScanAt = now;
+        hoverVideo = biggestVideo();
+      }
+      const v = activeVideo();
+      const r = v?.isConnected ? v.getBoundingClientRect() : null;
+      updateRail(v, r, true);
+      if (r && pointInsideRect(pointer.x, pointer.y, r)) {
+        controls.revealFor(2000);
+        if (!player.backend && !player.backendLoading && !player.blocked && now - preloadFailedAt > 5000) {
+          player.preload().catch(err => { preloadFailedAt = performance.now(); if (!player.blocked) log('preload', err); });
+        }
+      } else {
+        controls.limitReveal(250);
+      }
+    });
+  }, { passive: true, capture: true });
+
+  for (const type of ['pointerdown', 'keydown', 'wheel', 'input', 'change']) {
+    document.addEventListener(type, () => {
+      if (!controls?.isVisible()) return;
+      railActivity();
+      const v = activeVideo();
+      updateRail(v, v?.isConnected ? v.getBoundingClientRect() : null, true);
+    }, { passive: true, capture: true });
+  }
+
+  document.addEventListener('mouseleave', () => {
+    railAutoUntil = 0;
+    pointer = null;
+    updateRail(null, null);
+    controls?.limitReveal(250);
   }, { passive: true });
 
   // ---------- navigation ----------
@@ -245,6 +302,24 @@ export function boot() {
   let pageHref = location.href;
   let feedWatchdogVideo = null;
   setInterval(() => {
+    const candidate = biggestVideo();
+    if (!player.isRunning()) hoverVideo = candidate;
+    if (candidate) {
+      const source = candidate.currentSrc || '';
+      const switched = seenVideo && (seenVideo !== candidate ||
+        (seenSource && source && seenSource !== source) || videoPageHref !== location.href);
+      if (switched && controls) {
+        controls.blurFocus();
+        controls.setPanelOpen(false);
+        railActivityAt = performance.now();
+        railAutoUntil = railActivityAt + RAIL_IDLE_MS;
+        controls.place(candidate.getBoundingClientRect(), candidate);
+        armRailIdle();
+      }
+      seenVideo = candidate;
+      seenSource = source;
+      videoPageHref = location.href;
+    }
     if (location.href !== pageHref) {
       // SPA navigation to another page: the old stream is dead. The intent survives it (it is per site visit, not
       // per clip), but the stream does not.
@@ -259,11 +334,8 @@ export function boot() {
     if (autoEnabled && !inFeed() && !player.isRunning() && !toggling) {
       const v = biggestVideo();
       if (v?.videoWidth) {
-        controls?.revealFor(2500);
-        controls?.place(v.getBoundingClientRect(), v);
         toggling = true;
         player.start(v)
-          .then(() => { if (player.isRunning()) controls?.place(v.getBoundingClientRect(), v); })
           .catch(e => { player.preparing(false); log('auto start', e); })
           .finally(() => { toggling = false; });
       }
@@ -281,44 +353,23 @@ export function boot() {
       // the rail and the canvas stop following the clip above (the branch below re-arms once a video is ready).
       if (!stale && player.isRunning() && player.video && !onScreen(player.video)) player.stop();
       if (feedWanted && (!player.isRunning() || stale) && !toggling && v?.videoWidth) {
-        // show the rail right away: schedulePlacement() refuses to run while hidden, so the only way back from
-        // setVisible(false) is a direct place() — which ends in setVisible(true)
-        controls?.revealFor(2500);
-        controls?.place(v.getBoundingClientRect(), v);
         if (stale) player.stop();
         toggling = true;
         player.start(v)
-          .then(() => { if (player.isRunning()) controls?.place(v.getBoundingClientRect(), v); })
           .catch(e => { player.preparing(false); log('feed watchdog', e); })
           .finally(() => { toggling = false; });
       }
     }
-    if (!controls) return;
-    if (controls.isPanelOpen()) {
-      controls.revealFor(2000);
-      controls.schedulePlacement();
-      return;
-    }
-    // In a vertical feed the clip is scrolled with the mouse held still, so no mousemove arrives to keep the reveal
-    // alive and the rail used to be hidden two seconds after the swap — with nothing left to bring it back. While
-    // generation runs there, keep the rail revealed and repositioned from this poll instead.
-    if (inFeed() && player.isRunning()) {
-      controls.revealFor(1000);
-      controls.place(player.lastRect || player.video?.getBoundingClientRect(), player.video);
-      return;
-    }
-    if (controls.isVisible()) controls.schedulePlacement();
-    if (performance.now() > controls.revealUntil) {
-      controls.blurFocus();
-      controls.setPanelOpen(false);
-      controls.setVisible(false);
+    if (controls?.isVisible()) {
+      const v = activeVideo();
+      updateRail(v, v?.isConnected ? v.getBoundingClientRect() : null);
     }
   }, 300);
 
   document.addEventListener('scroll', () => {
     if (!controls?.isVisible()) return;
     const v = activeVideo();
-    if (v) controls.place(v.getBoundingClientRect(), v);
+    updateRail(v, v?.isConnected ? v.getBoundingClientRect() : null);
   }, { passive: true, capture: true });
   window.addEventListener('resize', () => controls?.schedulePlacement(), { passive: true });
   window.visualViewport?.addEventListener('resize', () => controls?.schedulePlacement(), { passive: true });
